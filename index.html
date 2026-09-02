@@ -1,80 +1,31 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="CivilKosh — a simple civic information hub for Nepal.">
-  <title>CivilKosh — Civic Information, Simplified</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="CivilKosh — Nepal-focused Civil Engineering Tools & Resources.">
+<title>CivilKosh — Civil Engineering Tools & Resources</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="site-header">
-    <div class="container nav-wrap">
-      <a class="brand" href="#top" aria-label="CivilKosh home"><span class="brand-mark">C</span><span>Civil<span>Kosh</span></span></a>
-      <nav aria-label="Main navigation">
-        <a href="#services">Services</a>
-        <a href="#categories">Categories</a>
-        <a href="#about">About</a>
-      </nav>
-      <a class="nav-button" href="#services">Explore services</a>
-    </div>
-  </header>
-
-  <main id="top">
-    <section class="hero">
-      <div class="container hero-grid">
-        <div>
-          <p class="eyebrow">NEPAL CIVIC INFORMATION HUB</p>
-          <h1>Public services, <em>made simpler.</em></h1>
-          <p class="hero-copy">Find practical information about government services, documents, applications and everyday civic needs — all in one clear place.</p>
-          <div class="search-box">
-            <label class="sr-only" for="search">Search CivilKosh</label>
-            <input id="search" type="search" placeholder="Search services, documents, offices…" autocomplete="off">
-            <button id="searchButton" type="button">Search</button>
-          </div>
-          <p class="search-hint">Try “citizenship”, “passport”, or “driving licence”.</p>
-        </div>
-        <div class="hero-card" aria-label="CivilKosh highlights">
-          <div class="card-orbit"></div>
-          <p class="card-label">QUICK ACCESS</p>
-          <h2>What do you need today?</h2>
-          <div class="quick-list">
-            <button data-query="citizenship">Citizenship information <span>→</span></button>
-            <button data-query="passport">Passport services <span>→</span></button>
-            <button data-query="driving">Driving licence <span>→</span></button>
-            <button data-query="birth">Birth registration <span>→</span></button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="services">
-      <div class="container">
-        <div class="section-head">
-          <div><p class="eyebrow">POPULAR SERVICES</p><h2>Start with what matters</h2></div>
-          <span id="resultCount" class="result-count"></span>
-        </div>
-        <div id="serviceGrid" class="service-grid"></div>
-        <div id="emptyState" class="empty-state" hidden>No matching services found. Try another search.</div>
-      </div>
-    </section>
-
-    <section class="section categories" id="categories">
-      <div class="container">
-        <div class="section-head"><div><p class="eyebrow">BROWSE BY NEED</p><h2>Explore categories</h2></div></div>
-        <div id="categoryGrid" class="category-grid"></div>
-      </div>
-    </section>
-
-    <section class="about" id="about">
-      <div class="container about-grid">
-        <div><p class="eyebrow">ABOUT CIVILKOSH</p><h2>Built for clarity, not complexity.</h2></div>
-        <p>CivilKosh is designed as a friendly starting point for people navigating civic services in Nepal. The interface is intentionally simple, fast and mobile-friendly, with room to grow into a richer information platform.</p>
-      </div>
-    </section>
-  </main>
-
-  <footer><div class="container footer-wrap"><strong>CivilKosh</strong><span>© 2026 CivilKosh. Initial website.</span><a href="#top">Back to top ↑</a></div></footer>
-  <script src="app.js"></script>
-</body>
-</html>
+<header class="site-header"><div class="container nav-wrap">
+<a class="brand" href="#top"><span class="brand-mark">CK</span><span>Civil<span>Kosh</span></span></a>
+<nav><a href="#tools">Tools</a><a href="#categories">Categories</a><a href="#resources">Resources</a></nav>
+<a class="nav-button" href="#tools">Explore tools</a>
+</div></header>
+<main id="top">
+<section class="hero"><div class="container hero-grid"><div>
+<p class="eyebrow">NEPAL-FOCUSED CIVIL ENGINEERING</p>
+<h1>Engineering tools for <em>work that matters.</em></h1>
+<p class="hero-copy">Practical calculators, unit converters and construction resources built for civil engineering students, site engineers, consultants and builders in Nepal.</p>
+<div class="search-box"><label class="sr-only" for="search">Search CivilKosh tools</label><input id="search" type="search" placeholder="Search calculators, converters, resources…"><button id="searchButton">Search</button></div>
+<p class="search-hint">Try “land unit”, “concrete”, “brick”, or “cement”.</p>
+</div>
+<div class="hero-card"><p class="card-label">FEATURED TOOL</p><div class="tool-symbol">▦</div><h2>Nepal Land Unit Converter</h2><p>Convert Ropani, Aana, Paisa, Daam, Bigha, Kattha and Dhur with Nepal-specific units.</p><a href="#tools" class="card-link">Open tools <span>→</span></a></div>
+</div></section>
+<section class="section" id="tools"><div class="container"><div class="section-head"><div><p class="eyebrow">ENGINEERING TOOLKIT</p><h2>Tools built for civil work</h2></div><span id="resultCount"></span></div><div id="toolGrid" class="tool-grid"></div><div id="emptyState" class="empty-state" hidden>No matching tools found. Try another search.</div></div></section>
+<section class="section categories" id="categories"><div class="container"><div class="section-head"><div><p class="eyebrow">BROWSE THE TOOLKIT</p><h2>Explore by category</h2></div></div><div id="categoryGrid" class="category-grid"></div></div></section>
+<section class="resources" id="resources"><div class="container resource-grid"><div><p class="eyebrow">CIVILKOSH RESOURCES</p><h2>Useful references for the field and classroom.</h2></div><div class="resource-list"><article><span>01</span><div><h3>Nepal Construction Reference</h3><p>Practical notes and reference material for common construction work.</p></div></article><article><span>02</span><div><h3>Quantity & Estimation Guides</h3><p>Understand quantities, materials and basic project cost estimation.</p></div></article><article><span>03</span><div><h3>Civil Engineering Fundamentals</h3><p>Clear explanations for students and early-career engineers.</p></div></article></div></div></section>
+</main>
+<footer><div class="container footer-wrap"><strong>CivilKosh</strong><span>Nepal-focused Civil Engineering Tools & Resources</span><a href="#top">Back to top ↑</a></div></footer>
+<script src="app.js"></script>
+</body></html>
