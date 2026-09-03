@@ -1,8 +1,26 @@
 const defaultSections=['Earthwork','Concrete','Reinforced Concrete','Masonry','Plaster & Finishes','Flooring','Reinforcement','Formwork','Road Works','Drainage','Water/Pipe Works','Other Civil Works'];
-let sections=[...defaultSections],items=[],editing=-1,adding=false;const $=id=>document.getElementById(id);const fmt=n=>new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);const esc=v=>String(v).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
-function init(){populateSections();$('projectDate').value=today();$('measurementDate').value=today();$('addItem').addEventListener('click',handleAddItem);$('toggleWorksheet').addEventListener('click',toggleWorksheet);$('toggleSections').addEventListener('click',()=>{const x=$('sectionManager');x.hidden=!x.hidden;$('toggleSections').textContent=x.hidden?'Manage sections':'Hide section manager'});$('addSection').addEventListener('click',addSection);$('useCalculated').addEventListener('change',()=>{const q=calcQty();if($('useCalculated').checked&&Number.isFinite(q))$('itemQty').value=q});['mLength','mWidth','mHeight','mNumber','mFactor'].forEach(id=>$(id).addEventListener('input',updateWorksheet));$('resetBoq').addEventListener('click',resetWorkspace);$('printBoq').addEventListener('click',()=>window.print());renderCustomSections();render();}
+let sections=[...defaultSections],items=[],editing=-1,itemMode='idle';
+const $=id=>document.getElementById(id);
+const fmt=n=>new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+const esc=v=>String(v).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
+
+function init(){
+  populateSections();
+  $('projectDate').value=today();
+  $('measurementDate').value=today();
+  $('addItem').addEventListener('click',handleAddItem);
+  $('toggleWorksheet').addEventListener('click',toggleWorksheet);
+  $('toggleSections').addEventListener('click',()=>{const x=$('sectionManager');x.hidden=!x.hidden;$('toggleSections').textContent=x.hidden?'Manage sections':'Hide section manager'});
+  $('addSection').addEventListener('click',addSection);
+  $('useCalculated').addEventListener('change',()=>{const q=calcQty();if($('useCalculated').checked&&Number.isFinite(q))$('itemQty').value=q});
+  ['mLength','mWidth','mHeight','mNumber','mFactor'].forEach(id=>$(id).addEventListener('input',updateWorksheet));
+  $('resetBoq').addEventListener('click',resetWorkspace);
+  $('printBoq').addEventListener('click',()=>window.print());
+  renderCustomSections();
+  render();
+}
 function today(){return new Date().toISOString().slice(0,10)}
-function populateSections(selected='Earthwork'){const sec=$('itemSection');sec.replaceChildren();sections.forEach(s=>sec.add(new Option(s,s)));sec.value=sections.includes(selected)?selected:sections[0]}
+function populateSections(selected='Earthwork'){const sec=$('itemSection');sec.replaceChildren();sections.forEach(s=>sec.add(new Option(s,s)));sec.value=sections.includes(selected)?selected:sections[0]||''}
 function addSection(){const input=$('newSection'),name=input.value.trim();if(!name)return;if(sections.some(s=>s.toLowerCase()===name.toLowerCase())){input.value='';return}sections.push(name);populateSections(name);input.value='';renderCustomSections()}
 function renameSection(i){const old=sections[i],name=prompt('Rename section:',old)?.trim();if(!name||sections.some((s,j)=>j!==i&&s.toLowerCase()===name.toLowerCase()))return;sections[i]=name;items.forEach(x=>{if(x.section===old)x.section=name});populateSections(name);renderCustomSections();render()}
 function removeSection(i){const name=sections[i];if(items.some(x=>x.section===name)){alert('This section contains BOQ items. Move or remove those items before deleting the section.');return}if(!confirm(`Remove section “${name}”?`))return;sections.splice(i,1);populateSections();renderCustomSections()}
@@ -10,11 +28,62 @@ function renderCustomSections(){$('customSections').innerHTML=sections.map((s,i)
 function calcQty(){const vals=['mLength','mWidth','mHeight','mNumber','mFactor'].map(id=>Number($(id).value));const [l,w,h,num,f]=vals;return vals.every(Number.isFinite)&&l>=0&&w>=0&&h>=0&&num>=0&&f>=0?l*w*h*num*f:NaN}
 function updateWorksheet(){const q=calcQty(),vals=['mLength','mWidth','mHeight','mNumber','mFactor'].map(id=>$(id).value);$('calculatedQty').textContent=Number.isFinite(q)?fmt(q):'—';$('quantityFormula').textContent=vals.some(v=>v!=='')?`${vals.map(v=>v===''?'?':v).join(' × ')} = ${Number.isFinite(q)?fmt(q):'—'}`:'Enter dimensions to calculate.';if($('useCalculated').checked&&Number.isFinite(q))$('itemQty').value=q}
 function toggleWorksheet(){const body=$('worksheetBody');body.hidden=!body.hidden;$('toggleWorksheet').textContent=body.hidden?'Show worksheet':'Hide worksheet'}
-function handleAddItem(){if(adding||editing>=0){saveItem();return}clearEditor();adding=true;$('addItem').textContent='Save item';$('itemEditor').scrollIntoView({behavior:'smooth',block:'start'});$('itemNo').focus()}
-function saveItem(){const no=$('itemNo').value.trim(),section=$('itemSection').value,desc=$('itemDescription').value.trim(),unit=$('itemUnit').value,qty=Number($('itemQty').value),rate=Number($('itemRate').value),remarks=$('itemRemarks').value.trim(),err=$('itemError'),errors=[];if(!no)errors.push('Item number is required.');if(!section)errors.push('Section is required.');if(!desc)errors.push('Work description is required.');if(!unit)errors.push('Unit is required.');if($('itemQty').value.trim()===''||!Number.isFinite(qty)||qty<0)errors.push('Enter a valid non-negative quantity.');if($('itemRate').value.trim()===''||!Number.isFinite(rate)||rate<0)errors.push('Enter a valid non-negative rate.');if(errors.length){err.textContent=errors.join(' ');err.hidden=false;return}err.hidden=true;const item={no,section,desc,unit,qty,rate,remarks,amount:qty*rate,rateAnalysis:{materials:[],labour:[],equipment:[],wastage:null,overhead:null,profit:null,other:[]},measurement:{note:'',location:'',drawingReference:'',date:'',measured:null,approved:null,previous:null,current:null}};if(editing>=0){const old=items[editing];item.rateAnalysis=old.rateAnalysis||item.rateAnalysis;item.measurement=old.measurement||item.measurement;items[editing]=item}else items.push(item);editing=-1;adding=false;clearEditor();render()}
-function clearEditor(){$('itemNo').value='';$('itemDescription').value='';$('itemQty').value='';$('itemRate').value='';$('itemRemarks').value='';$('itemUnit').value='';$('itemSection').value=sections[0]||'';$('useCalculated').checked=false;['mLength','mWidth','mHeight'].forEach(id=>$(id).value='');$('mNumber').value='1';$('mFactor').value='1';$('itemError').hidden=true;updateWorksheet();$('addItem').textContent='Add item'}
-function render(){const tbody=$('boqRows');tbody.innerHTML=items.map((x,i)=>`<tr><td>${esc(x.no)}</td><td>${esc(x.section)}</td><td>${esc(x.desc)}</td><td>${esc(x.unit)}</td><td class="num">${fmt(x.qty)}</td><td class="num">${fmt(x.rate)}</td><td class="num">${fmt(x.amount)}</td><td>${esc(x.remarks)}</td><td><div class="row-actions"><button type="button" data-edit="${i}">Edit</button><button type="button" data-remove="${i}">Remove</button></div></td></tr>`).join('');$('emptyItems').hidden=items.length>0;tbody.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>editItem(Number(b.dataset.edit))));tbody.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click',()=>{items.splice(Number(b.dataset.remove),1);render()}));const total=items.reduce((a,x)=>a+x.amount,0);$('grandTotal').textContent=`NPR ${fmt(total)}`;renderSections()}
+function handleAddItem(){
+  if(itemMode==='editing' || itemMode==='adding'){
+    saveItem();
+    return;
+  }
+  clearEditor();
+  itemMode='adding';
+  editing=-1;
+  const button=$('addItem');
+  button.textContent='Save item';
+  button.dataset.mode='save';
+  button.setAttribute('aria-label','Save BOQ item');
+  $('itemEditor').scrollIntoView({behavior:'smooth',block:'start'});
+  $('itemNo').focus();
+}
+function saveItem(){
+  const no=$('itemNo').value.trim(),section=$('itemSection').value,desc=$('itemDescription').value.trim(),unit=$('itemUnit').value,qty=Number($('itemQty').value),rate=Number($('itemRate').value),remarks=$('itemRemarks').value.trim(),err=$('itemError'),errors=[];
+  if(!no)errors.push('Item number is required.');
+  if(!section)errors.push('Section is required.');
+  if(!desc)errors.push('Work description is required.');
+  if(!unit)errors.push('Unit is required.');
+  if($('itemQty').value.trim()===''||!Number.isFinite(qty)||qty<0)errors.push('Enter a valid non-negative quantity.');
+  if($('itemRate').value.trim()===''||!Number.isFinite(rate)||rate<0)errors.push('Enter a valid non-negative rate.');
+  if(errors.length){err.textContent=errors.join(' ');err.hidden=false;return}
+  err.hidden=true;
+  const item={no,section,desc,unit,qty,rate,remarks,amount:qty*rate,rateAnalysis:{materials:[],labour:[],equipment:[],wastage:null,overhead:null,profit:null,other:[]},measurement:{note:'',location:'',drawingReference:'',date:'',measured:null,approved:null,previous:null,current:null}};
+  if(editing>=0){
+    const old=items[editing];
+    item.rateAnalysis=old.rateAnalysis||item.rateAnalysis;
+    item.measurement=old.measurement||item.measurement;
+    items[editing]=item;
+  }else{
+    items.push(item);
+  }
+  editing=-1;
+  itemMode='idle';
+  clearEditor();
+  render();
+}
+function clearEditor(){
+  $('itemNo').value='';$('itemDescription').value='';$('itemQty').value='';$('itemRate').value='';$('itemRemarks').value='';$('itemUnit').value='';$('itemSection').value=sections[0]||'';$('useCalculated').checked=false;
+  ['mLength','mWidth','mHeight'].forEach(id=>$(id).value='');$('mNumber').value='1';$('mFactor').value='1';$('itemError').hidden=true;
+  updateWorksheet();
+  const button=$('addItem');button.textContent='+ Add item';button.dataset.mode='add';button.setAttribute('aria-label','Add BOQ item');
+}
+function render(){
+  const tbody=$('boqRows');
+  tbody.innerHTML=items.map((x,i)=>`<tr><td>${esc(x.no)}</td><td>${esc(x.section)}</td><td>${esc(x.desc)}</td><td>${esc(x.unit)}</td><td class="num">${fmt(x.qty)}</td><td class="num">${fmt(x.rate)}</td><td class="num">${fmt(x.amount)}</td><td>${esc(x.remarks)}</td><td><div class="row-actions"><button type="button" data-edit="${i}">Edit</button><button type="button" data-remove="${i}">Remove</button></div></td></tr>`).join('');
+  $('emptyItems').hidden=items.length>0;
+  tbody.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>editItem(Number(b.dataset.edit))));
+  tbody.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click',()=>{items.splice(Number(b.dataset.remove),1);render()}));
+  const total=items.reduce((a,x)=>a+x.amount,0);
+  $('grandTotal').textContent=`NPR ${fmt(total)}`;
+  renderSections();
+}
 function renderSections(){const map={};items.forEach(x=>map[x.section]=(map[x.section]||0)+x.amount);const rows=Object.entries(map);$('sectionSummary').innerHTML=rows.length?rows.map(([s,n])=>`<div class="summary-row"><span>${esc(s)}</span><strong>NPR ${fmt(n)}</strong></div>`).join(''):'<p>No section totals yet.</p>'}
-function editItem(i){const x=items[i];editing=i;adding=false;$('addItem').textContent='Save item';$('itemNo').value=x.no;$('itemSection').value=x.section;$('itemDescription').value=x.desc;$('itemUnit').value=x.unit;$('itemQty').value=x.qty;$('itemRate').value=x.rate;$('itemRemarks').value=x.remarks;$('itemError').hidden=true;$('itemEditor').scrollIntoView({behavior:'smooth',block:'start'})}
-function resetWorkspace(){if(!confirm('Reset the BOQ workspace and remove all entered items?'))return;items=[];editing=-1;adding=false;document.querySelectorAll('input,textarea').forEach(el=>{if(!['mNumber','mFactor'].includes(el.id)&&el.type!=='date')el.value=''});$('projectDate').value=today();$('measurementDate').value=today();$('mNumber').value='1';$('mFactor').value='1';clearEditor();render()}
+function editItem(i){const x=items[i];editing=i;itemMode='editing';$('addItem').textContent='Save item';$('addItem').dataset.mode='save';$('addItem').setAttribute('aria-label','Save BOQ item');$('itemNo').value=x.no;$('itemSection').value=x.section;$('itemDescription').value=x.desc;$('itemUnit').value=x.unit;$('itemQty').value=x.qty;$('itemRate').value=x.rate;$('itemRemarks').value=x.remarks;$('itemError').hidden=true;$('itemEditor').scrollIntoView({behavior:'smooth',block:'start');}
+function resetWorkspace(){if(!confirm('Reset the BOQ workspace and remove all entered items?'))return;items=[];editing=-1;itemMode='idle';document.querySelectorAll('input,textarea').forEach(el=>{if(!['mNumber','mFactor'].includes(el.id)&&el.type!=='date')el.value=''});$('projectDate').value=today();$('measurementDate').value=today();$('mNumber').value='1';$('mFactor').value='1';clearEditor();render()}
 document.addEventListener('DOMContentLoaded',init);
