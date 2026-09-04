@@ -1,6 +1,6 @@
 let rateAnalysisSelection=null;
 const rateAnalysisRoot=()=>document.getElementById('rateAnalysisRoot');
-const commonRateUnits=['m³','m²','m','kg','No.','L','set','hr','tonne','number','lump sum','bag','m³/hr','m²/hr','kg/hr'];
+const commonRateUnits=['m³','m²','m','kg','No.','L','set','hr','tonne','number','lump sum','bag','m³/hr','m²/hr','kg/hr','day'];
 function ensureRateAnalysis(item){item.rateAnalysis=item.rateAnalysis||{};['materials','labour','equipment','other'].forEach(k=>item.rateAnalysis[k]=item.rateAnalysis[k]||[]);return item.rateAnalysis}
 function rateRows(ra){return ['materials','labour','equipment','other'].flatMap(category=>ra[category].map((x,index)=>({...x,category,index})))}
 function rateAmount(x){const n=Number(x.norm),r=Number(x.rate);return Number.isFinite(n)&&Number.isFinite(r)&&n>=0&&r>=0?n*r:NaN}
