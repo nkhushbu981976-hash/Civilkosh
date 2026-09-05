@@ -7,4 +7,4 @@ function restoreBoqWorkspace(){try{const raw=localStorage.getItem(BOQ_WORKSPACE_
 function clearBoqWorkspacePersistence(){try{localStorage.removeItem(BOQ_WORKSPACE_STORAGE_KEY)}catch(e){}}
 let boqPersistenceTimer;
 function scheduleBoqWorkspaceSave(){clearTimeout(boqPersistenceTimer);boqPersistenceTimer=setTimeout(saveBoqWorkspace,50)}
-document.addEventListener('DOMContentLoaded',()=>{restoreBoqWorkspace();document.addEventListener('input',scheduleBoqWorkspaceSave);document.addEventListener('change',scheduleBoqWorkspaceSave);document.addEventListener('click',e=>{if(e.target.closest('#resetBoq')){setTimeout(clearBoqWorkspacePersistence,0);return}scheduleBoqWorkspaceSave()});});
+document.addEventListener('DOMContentLoaded',()=>{restoreBoqWorkspace();if(typeof initIPC==='function')initIPC();document.addEventListener('input',scheduleBoqWorkspaceSave);document.addEventListener('change',scheduleBoqWorkspaceSave);document.addEventListener('click',e=>{if(e.target.closest('#resetBoq')){setTimeout(clearBoqWorkspacePersistence,0);return}scheduleBoqWorkspaceSave()});});
