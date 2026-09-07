@@ -31,28 +31,29 @@
     });
     const cover=doc.createElement('section');
     cover.className='ipc-cover';
-    const field=(label,key)=>`<div class="ipc-cover-field"><span>${label}</span><strong>${data[key]||'—'}</strong></div>`;
+    const field=(label,key,wide=false)=>`<div class="ipc-cover-field${wide?' wide':''}"><span>${label}</span><strong>${data[key]||'—'}</strong></div>`;
     cover.innerHTML=`
       <div class="ipc-cover-heading">
+        <div class="ipc-cover-organization">${data['Employer / Client']||'—'}</div>
+        <div class="ipc-cover-rule"></div>
         <div class="ipc-cover-kicker">PAYMENT CERTIFICATE</div>
         <h1>INTERIM PAYMENT CERTIFICATE</h1>
-        <div class="ipc-cover-subtitle">${data['IPC / Running Bill No.']||'—'}</div>
+        <div class="ipc-cover-number">${data['IPC / Running Bill No.']||'—'}</div>
       </div>
-      <div class="ipc-cover-block">
-        <div class="ipc-cover-block-title">Project &amp; Contract Information</div>
+      <div class="ipc-cover-block ipc-cover-identity">
+        <div class="ipc-cover-block-title">Project Identity</div>
         <div class="ipc-cover-grid">
+          ${field('Project / Work','Project / Work',true)}
+          ${field('Project Location','Location',true)}
           ${field('Employer / Client','Employer / Client')}
           ${field('Contractor','Contractor')}
-          ${field('Project / Work','Project / Work')}
-          ${field('Project Location','Location')}
-          ${field('Contract / Work Order No.','Work Order / Contract No.')}
+          ${field('Contract / Work Order No.','Work Order / Contract No.',true)}
           ${field('IPC / Running Bill No.','IPC / Running Bill No.')}
           ${field('Certificate / Bill Date','Bill Date')}
-          ${field('Previous IPC','Previous IPC')}
         </div>
       </div>
-      <div class="ipc-cover-block ipc-cover-cert">
-        <div class="ipc-cover-block-title">Certificate Details</div>
+      <div class="ipc-cover-block ipc-cover-control">
+        <div class="ipc-cover-block-title">Document Control</div>
         <div class="ipc-cover-signatures">
           <div><span>Prepared By</span><strong>${certData['Prepared By']||data['Prepared By']||'—'}</strong></div>
           <div><span>Checked By</span><strong>${certData['Checked By']||'—'}</strong></div>
@@ -69,21 +70,27 @@
     const style=doc.createElement('style');
     style.textContent=`
       .ipc-cover{margin:0 0 9pt;break-inside:avoid;page-break-inside:avoid}
-      .ipc-cover-heading{border:1.4px solid #4f5652;text-align:center;padding:14pt 12pt 12pt;margin-bottom:8pt}
+      .ipc-cover-heading{border:1.4px solid #4f5652;text-align:center;padding:16pt 14pt 15pt;margin-bottom:11pt;min-height:112pt;display:flex;flex-direction:column;justify-content:center}
+      .ipc-cover-organization{font-size:11pt;font-weight:700;letter-spacing:.025em;text-transform:uppercase;line-height:1.25}
+      .ipc-cover-rule{width:38%;border-top:1px solid #7c837e;margin:7pt auto 6pt}
       .ipc-cover-kicker{font-size:7pt;font-weight:700;letter-spacing:.12em;color:#5c645f;text-transform:uppercase;margin-bottom:5pt}
-      .ipc-cover-heading h1{font-size:18pt;line-height:1.15;letter-spacing:.03em;font-weight:700;margin:0}
-      .ipc-cover-subtitle{font-size:9pt;font-weight:700;margin-top:5pt}
-      .ipc-cover-block{border:1px solid #7c837e;margin-top:8pt;break-inside:avoid;page-break-inside:avoid}
-      .ipc-cover-block-title{font-size:8.2pt;font-weight:700;text-transform:uppercase;letter-spacing:.04em;background:#edf0ee;border-bottom:1px solid #7c837e;padding:5pt 6pt}
+      .ipc-cover-heading h1{font-size:18pt;line-height:1.15;letter-spacing:.025em;font-weight:700;margin:0}
+      .ipc-cover-number{font-size:10.5pt;font-weight:700;margin-top:7pt;letter-spacing:.04em}
+      .ipc-cover-block{border:1px solid #7c837e;margin-top:10pt;break-inside:avoid;page-break-inside:avoid}
+      .ipc-cover-block-title{font-size:8.2pt;font-weight:700;text-transform:uppercase;letter-spacing:.04em;background:#edf0ee;border-bottom:1px solid #7c837e;padding:5pt 7pt}
       .ipc-cover-grid{display:grid;grid-template-columns:1fr 1fr}
-      .ipc-cover-field{display:grid;grid-template-columns:42% 58%;padding:6pt;border-right:1px solid #c3c8c5;border-bottom:1px solid #c3c8c5;min-width:0}
-      .ipc-cover-field:nth-child(2n){border-right:0}.ipc-cover-field:nth-last-child(-n+2){border-bottom:0}
-      .ipc-cover-field span,.ipc-cover-signatures span{font-size:7pt;color:#59615c;font-weight:700;text-transform:uppercase}
-      .ipc-cover-field strong{font-size:8.3pt;overflow-wrap:anywhere}
+      .ipc-cover-field{display:grid;grid-template-columns:40% 60%;padding:7pt 8pt;min-width:0;border-right:1px solid #c3c8c5;border-bottom:1px solid #c3c8c5}
+      .ipc-cover-field.wide{grid-column:1 / -1;grid-template-columns:20% 80%;border-right:0}
+      .ipc-cover-field:nth-last-child(1){border-bottom:0}
+      .ipc-cover-field span{font-size:7pt;color:#59615c;font-weight:700;text-transform:uppercase}
+      .ipc-cover-field strong{font-size:8.5pt;overflow-wrap:anywhere}
+      .ipc-cover-control{margin-top:10pt}
       .ipc-cover-signatures{display:grid;grid-template-columns:repeat(4,1fr)}
-      .ipc-cover-signatures>div{min-height:38pt;padding:8pt 7pt;border-right:1px solid #c3c8c5}
+      .ipc-cover-signatures>div{min-height:54pt;padding:9pt 8pt;border-right:1px solid #c3c8c5;position:relative}
       .ipc-cover-signatures>div:last-child{border-right:0}
-      .ipc-cover-signatures strong{display:block;margin-top:8pt;font-size:8pt;overflow-wrap:anywhere}
+      .ipc-cover-signatures span{font-size:7pt;color:#59615c;font-weight:700;text-transform:uppercase}
+      .ipc-cover-signatures strong{display:block;margin-top:17pt;font-size:8pt;overflow-wrap:anywhere}
+      @media print{.ipc-cover{min-height:245mm}}
     `;
     doc.head.appendChild(style);
     return '<!doctype html>'+doc.documentElement.outerHTML;
