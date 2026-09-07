@@ -39,3 +39,18 @@ function ipcSave(){ipcSync();if(!ipcState.record.no)ipcState.record.no=ipcState.
 function ipcAmountWords(n){const value=Math.round((Number(n)||0)*100)/100;if(value===0)return'Zero rupees only';const ones=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'],tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];const under100=x=>x<20?ones[x]:tens[Math.floor(x/10)]+(x%10?' '+ones[x%10]:'');const under1000=x=>x<100?under100(x):ones[Math.floor(x/100)]+' Hundred'+(x%100?' '+under100(x%100):'');const parts=[];let whole=Math.floor(value);[[10000000,'Crore'],[100000,'Lakh'],[1000,'Thousand'],[100,'Hundred']].forEach(([base,label])=>{if(whole>=base){const q=Math.floor(whole/base);parts.push(under1000(q)+' '+label);whole%=base}});if(whole)parts.push(under1000(whole));const paisa=Math.round((value-Math.floor(value))*100);return parts.join(' ')+(paisa?' rupees and '+under100(paisa)+' paisa only':' rupees only')}
 function initIPC(){if(ipc$('ipcRoot'))return;const basis=document.querySelector('.basis-panel');if(!basis)return;const section=document.createElement('section');section.className='boq-panel';section.id='ipcRoot';section.innerHTML='<div class="panel-head"><div><span class="panel-kicker">IPC / RUNNING BILL</span><h2>Payment & Certification Workflow</h2></div><span class="panel-note">Uses saved BOQ items and measurement history</span></div><div class="ipc-body"><p class="muted-note">Preparing IPC workflow…</p></div>';basis.parentNode.insertBefore(section,basis);const originalRender=window.render;if(typeof originalRender==='function')window.render=()=>{originalRender();ipcRender()};ipcRender()}
 document.addEventListener('DOMContentLoaded',initIPC);
+
+/* Saved IPC records are authoritative for an edit, including an intentional zero.
+   A new unsaved IPC may derive its current quantity from unbilled measurement evidence,
+   but editing a saved IPC must never silently recompute its certified quantity. */
+const ipcCurrentQtyOriginal=ipcCurrentQty;
+ipcCurrentQty=function(item){
+  const editingNo=ipcState.record?.editingNo||'';
+  if(editingNo){
+    const itemIndex=items.indexOf(item);
+    const saved=ipcState.record?.items?.find(x=>x.itemIndex===itemIndex);
+    if(saved)return Number(saved.current)||0;
+    return Number(ipcSavedCurrent(item,editingNo)||0);
+  }
+  return ipcCurrentQtyOriginal(item);
+};
