@@ -58,6 +58,7 @@
         boqSection.appendChild(wrap);
       }
     }
+    refineSupportingSections(doc);
     const cover=doc.createElement('section');
     cover.className='ipc-cover';
     const field=(label,key,wide=false)=>`<div class="ipc-cover-field${wide?' wide':''}"><span>${label}</span><strong>${data[key]||'—'}</strong></div>`;
@@ -129,5 +130,82 @@
     `;
     doc.head.appendChild(style);
     return '<!doctype html>'+doc.documentElement.outerHTML;
+  }
+  function refineSupportingSections(doc){
+    const sections=[...doc.querySelectorAll('.section')];
+    const findSection=rx=>sections.find(s=>rx.test(s.querySelector('.section-title')?.textContent||''));
+    const cleanTextNodes=(root,patterns)=>[...root.querySelectorAll('.section-note,.callout')].forEach(el=>{const t=el.textContent||'';if(patterns.some(rx=>rx.test(t)))el.remove()});
+
+    const measurement=findSection(/^4\.\s*Measurement \/ MB Verification/i);
+    if(measurement){
+      cleanTextNodes(measurement,[/supporting evidence only/i,/ipc certified quantity remains a separate/i,/no record-level allocation is inferred/i,/traceability/i,/payment-control/i]);
+      measurement.querySelectorAll('.evidence-recon').forEach(el=>el.remove());
+      const groups=[...measurement.querySelectorAll('.evidence-group')];
+      const meaningful=groups.filter(group=>[...group.querySelectorAll('.evidence-record-table tbody tr')].some(row=>row.querySelectorAll('td').length>1&&!/^\s*(no |—|-)\s*/i.test(row.textContent.trim())));
+      groups.forEach(group=>{if(!meaningful.includes(group))group.remove()});
+      if(!meaningful.length){
+        [...measurement.children].forEach((el,i)=>{if(i>0)el.remove()});
+        const note=doc.createElement('p');
+        note.className='section-note';
+        note.textContent='No measurement record is linked to the current IPC quantities.';
+        measurement.appendChild(note);
+      }
+    }
+
+    const certification=findSection(/^7\.\s*Net Payment \/ Certification/i);
+    if(certification){
+      cleanTextNodes(certification,[/application data only/i,/software/i,/debug/i]);
+      const outside=[];
+      let cursor=certification.nextElementSibling;
+      while(cursor&&!cursor.classList.contains('section')){outside.push(cursor);cursor=cursor.nextElementSibling}
+      const sigBlocks=[...certification.querySelectorAll('.signatures')];
+      sigBlocks.slice(1).forEach(el=>el.remove());
+      const externalSigs=outside.filter(el=>el.classList?.contains('signatures'));
+      externalSigs.slice(1).forEach(el=>el.remove());
+      if(externalSigs.length)externalSigs[0].remove();
+      certification.querySelectorAll('.certification-note,.section-note').forEach(el=>{if(/application data|software|debug/i.test(el.textContent||''))el.remove()});
+    }
+
+    const documents=findSection(/^8\.\s*Supporting Document \/ Attachment Register/i);
+    if(documents){
+      const table=documents.querySelector('.docs-table,.attachment-table');
+      if(table){
+        const rows=[...table.querySelectorAll('tbody tr')];
+        const actual=rows.filter(row=>{
+          const cells=[...row.querySelectorAll('td')];
+          const text=cells.map(c=>(c.textContent||'').trim()).join(' ').replace(/\s+/g,' ').trim();
+          if(!text||/^no supporting documents/i.test(text))return false;
+          const inputs=[...row.querySelectorAll('input,select')].map(x=>(x.value||'').trim());
+          return inputs.some(Boolean)||cells.some(c=>/available|pending|not applicable|reference|document/i.test(c.textContent||''));
+        }).filter(row=>{
+          const cells=[...row.querySelectorAll('td')];
+          const inputs=[...row.querySelectorAll('input,select')].map(x=>(x.value||'').trim());
+          const status=inputs.find(v=>/^(Available|Pending|Not Applicable)$/i.test(v))||'';
+          const refDateRemark=inputs.some(v=>v&&!/^(Available|Pending|Not Applicable)$/i.test(v));
+          const name=cells[0]?.textContent?.trim()||'';
+          return Boolean(status&&status.toLowerCase()!=='not applicable')||refDateRemark||(!/^(Measurement Book \/ Measurement Sheet|Joint Measurement Record|Approved Drawing \/ Reference|Site Measurement Evidence|Laboratory \/ Test Report|VAT Bill \/ Invoice|Other Supporting Document)$/i.test(name)&&Boolean(name));
+        });
+        rows.forEach(row=>{if(!actual.includes(row))row.remove()});
+        if(!actual.length)documents.remove();
+      }else{
+        documents.remove();
+      }
+    }
+
+    const index=findSection(/^9\.\s*Evidence Index/i);
+    if(index){
+      const tables=[...index.querySelectorAll('.attachment-table,.docs-table,.evidence-record-table,table')];
+      let actual=false;
+      tables.forEach(table=>{
+        [...table.querySelectorAll('tbody tr')].forEach(row=>{
+          const cells=[...row.querySelectorAll('td')];
+          const text=cells.map(c=>(c.textContent||'').trim()).join(' ').replace(/\s+/g,' ').trim();
+          const meaningful=text&&!/^\s*(no |none|—|-)/i.test(text)&&!/^\s*(evidence|attachment)\s*\d*\s*$/i.test(text);
+          if(meaningful)actual=true;else row.remove();
+        });
+      });
+      index.querySelectorAll('.section-note,.callout,.evidence-recon').forEach(el=>el.remove());
+      if(!actual)index.remove();
+    }
   }
 })();
