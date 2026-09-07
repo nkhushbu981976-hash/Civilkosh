@@ -48,16 +48,6 @@
           row.innerHTML=`<td>${q[0].innerHTML}</td><td>${q[1].innerHTML}</td><td class="center nowrap">${q[2].innerHTML}</td><td class="num">${q[3].innerHTML}</td><td class="num">${q[4].innerHTML}</td><td class="num">${q[5].innerHTML}</td><td class="num">${q[6].innerHTML}</td><td class="num">${q[7].innerHTML}</td><td class="num">${a[2].innerHTML}</td><td class="num">${a[4].innerHTML}</td><td class="num">${a[5].innerHTML}</td>`;
           body.appendChild(row);
         });
-        const totalRow=amountTable.querySelector('tbody tr.grand-total');
-        if(totalRow){
-          const cells=totalRow.querySelectorAll('td');
-          if(cells.length===7){
-            const row=doc.createElement('tr');
-            row.className='grand-total';
-            row.innerHTML=`<td colspan="4">Totals</td><td></td><td class="num">${cells[4].innerHTML}</td><td class="num">${cells[5].innerHTML}</td><td class="num">${cells[6].innerHTML}</td><td></td><td class="num">${cells[4].innerHTML}</td><td class="num">${cells[5].innerHTML}</td>`;
-            body.appendChild(row);
-          }
-        }
         const note=boqSection.querySelector('.section-note');
         note?.remove();
         quantityTable.remove();
@@ -65,7 +55,7 @@
         const wrap=doc.createElement('div');
         wrap.className='table-wrap';
         wrap.appendChild(table);
-        boqSection.insertBefore(wrap,boqSection.querySelector('.table-wrap')||null);
+        boqSection.appendChild(wrap);
       }
     }
     const cover=doc.createElement('section');
