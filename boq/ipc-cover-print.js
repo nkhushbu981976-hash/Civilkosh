@@ -29,6 +29,45 @@
       const cells=row.querySelectorAll('td');
       if(cells.length===2)certData[cells[0].textContent.trim()]=cells[1].textContent.trim();
     });
+    const boqSection=[...doc.querySelectorAll('.section')].find(s=>/3\.\s*BOQ Current Bill \/ Valuation/i.test(s.querySelector('.section-title')?.textContent||''));
+    if(boqSection){
+      const quantityTable=boqSection.querySelector('.qty-table');
+      const amountTable=boqSection.querySelector('.amount-table');
+      const quantityRows=[...(quantityTable?.querySelectorAll('tbody tr')||[])];
+      const amountRows=[...(amountTable?.querySelectorAll('tbody tr')||[])].filter(row=>row.querySelectorAll('td').length===7);
+      if(quantityTable&&amountTable){
+        const table=doc.createElement('table');
+        table.className='boq-valuation-table';
+        table.innerHTML=`<thead><tr><th>Item No.</th><th>Description</th><th>Unit</th><th class="num">BOQ Qty</th><th class="num">Previous Qty</th><th class="num">Current Qty</th><th class="num">Cumulative Qty</th><th class="num">Balance Qty</th><th class="num">Rate</th><th class="num">Current Amount</th><th class="num">Cumulative Amount</th></tr></thead><tbody></tbody>`;
+        const body=table.querySelector('tbody');
+        quantityRows.forEach((qRow,index)=>{
+          const q=qRow.querySelectorAll('td');
+          const a=amountRows[index]?.querySelectorAll('td');
+          if(q.length!==8||!a||a.length!==7)return;
+          const row=doc.createElement('tr');
+          row.innerHTML=`<td>${q[0].innerHTML}</td><td>${q[1].innerHTML}</td><td class="center nowrap">${q[2].innerHTML}</td><td class="num">${q[3].innerHTML}</td><td class="num">${q[4].innerHTML}</td><td class="num">${q[5].innerHTML}</td><td class="num">${q[6].innerHTML}</td><td class="num">${q[7].innerHTML}</td><td class="num">${a[2].innerHTML}</td><td class="num">${a[4].innerHTML}</td><td class="num">${a[5].innerHTML}</td>`;
+          body.appendChild(row);
+        });
+        const totalRow=amountTable.querySelector('tbody tr.grand-total');
+        if(totalRow){
+          const cells=totalRow.querySelectorAll('td');
+          if(cells.length===7){
+            const row=doc.createElement('tr');
+            row.className='grand-total';
+            row.innerHTML=`<td colspan="4">Totals</td><td></td><td class="num">${cells[4].innerHTML}</td><td class="num">${cells[5].innerHTML}</td><td class="num">${cells[6].innerHTML}</td><td></td><td class="num">${cells[4].innerHTML}</td><td class="num">${cells[5].innerHTML}</td>`;
+            body.appendChild(row);
+          }
+        }
+        const note=boqSection.querySelector('.section-note');
+        note?.remove();
+        quantityTable.remove();
+        amountTable.remove();
+        const wrap=doc.createElement('div');
+        wrap.className='table-wrap';
+        wrap.appendChild(table);
+        boqSection.insertBefore(wrap,boqSection.querySelector('.table-wrap')||null);
+      }
+    }
     const cover=doc.createElement('section');
     cover.className='ipc-cover';
     const field=(label,key,wide=false)=>`<div class="ipc-cover-field${wide?' wide':''}"><span>${label}</span><strong>${data[key]||'—'}</strong></div>`;
@@ -93,6 +132,9 @@
       .ipc-cover-signatures span{font-size:7pt;color:#59615c;font-weight:700;text-transform:uppercase}
       .ipc-cover-signatures strong{display:block;margin-top:20pt;font-size:8pt;overflow-wrap:anywhere}
       .ipc-page-two-start{break-before:page;page-break-before:always}
+      .boq-valuation-table{font-size:6.55pt}
+      .boq-valuation-table th:nth-child(1){width:5%}.boq-valuation-table th:nth-child(2){width:25%}.boq-valuation-table th:nth-child(3){width:5%}.boq-valuation-table th:nth-child(4){width:7%}.boq-valuation-table th:nth-child(5){width:7%}.boq-valuation-table th:nth-child(6){width:7%}.boq-valuation-table th:nth-child(7){width:8%}.boq-valuation-table th:nth-child(8){width:7%}.boq-valuation-table th:nth-child(9){width:10%}.boq-valuation-table th:nth-child(10){width:9%}.boq-valuation-table th:nth-child(11){width:10%}
+      .boq-valuation-table th,.boq-valuation-table td{padding:3pt 3pt}
       @media print{.ipc-cover{min-height:245mm;break-after:page;page-break-after:always}.ipc-page-two-start{break-before:page;page-break-before:always}}
     `;
     doc.head.appendChild(style);
