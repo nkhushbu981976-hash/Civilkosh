@@ -131,6 +131,10 @@
       .boq-valuation-table th:nth-child(7){min-width:9%}
       .boq-valuation-table td.num{white-space:nowrap;overflow-wrap:normal;word-break:normal}
       .boq-valuation-table td.num{overflow:hidden;text-overflow:clip}
+      .boq-valuation-table td:nth-child(9),.boq-valuation-table td:nth-child(10),.boq-valuation-table td:nth-child(11){font-variant-numeric:tabular-nums}
+      .boq-valuation-table td:nth-child(9),.boq-valuation-table td:nth-child(10),.boq-valuation-table td:nth-child(11){font-feature-settings:"tnum" 1}
+      .boq-valuation-table td:nth-child(9),.boq-valuation-table td:nth-child(10),.boq-valuation-table td:nth-child(11){white-space:nowrap}
+      .boq-valuation-table td:nth-child(10) .currency,.boq-valuation-table td:nth-child(11) .currency{display:none}
       .section .summary{width:100%;table-layout:fixed}
       .section .summary tr>td:first-child{width:68%;text-align:left;padding:4pt 8pt}
       .section .summary tr>td:last-child{width:32%;text-align:right;padding:4pt 8pt;white-space:nowrap}
