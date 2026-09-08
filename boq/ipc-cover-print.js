@@ -45,8 +45,11 @@
           const q=qRow.querySelectorAll('td');
           const a=amountRows[index]?.querySelectorAll('td');
           if(q.length!==8||!a||a.length!==7)return;
+          const rate=Number((a[2].textContent||'').replace(/[^0-9.-]/g,''));
+          const currentAmount=Number(q[5].textContent)*rate;
+          const cumulativeAmount=Number(q[6].textContent)*rate;
           const row=doc.createElement('tr');
-          row.innerHTML=`<td>${q[0].innerHTML}</td><td>${q[1].innerHTML}</td><td class="center nowrap">${q[2].innerHTML}</td><td class="num">${q[3].innerHTML}</td><td class="num">${q[4].innerHTML}</td><td class="num">${q[5].innerHTML}</td><td class="num">${q[6].innerHTML}</td><td class="num">${q[7].innerHTML}</td><td class="num">${a[2].innerHTML}</td><td class="num">${formatBoqAmount(q[5]?.textContent||0)}</td><td class="num">${formatBoqAmount(q[6]?.textContent||0)}</td>`;
+          row.innerHTML=`<td>${q[0].innerHTML}</td><td>${q[1].innerHTML}</td><td class="center nowrap">${q[2].innerHTML}</td><td class="num">${q[3].innerHTML}</td><td class="num">${q[4].innerHTML}</td><td class="num">${q[5].innerHTML}</td><td class="num">${q[6].innerHTML}</td><td class="num">${q[7].innerHTML}</td><td class="num">${a[2].innerHTML}</td><td class="num">${formatBoqAmount(currentAmount)}</td><td class="num">${formatBoqAmount(cumulativeAmount)}</td>`;
           body.appendChild(row);
         });
         const note=boqSection.querySelector('.section-note');
