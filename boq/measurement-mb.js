@@ -55,3 +55,77 @@
   window.measurementMbRefresh=mbRender;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mbInit);else mbInit();
 })();
+
+/* Print-only linkage: reuse the same saved measurementRecords data shown above. */
+(function(){
+  if(window.__measurementMbPrintLinkInstalled)return;
+  window.__measurementMbPrintLinkInstalled=true;
+  function esc(v){return String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]))}
+  function fmt(v){return Number.isFinite(Number(v))?Number(v).toFixed(2):'—'}
+  function unit(v,u){return v==null?'—':`${fmt(v)} ${esc(u||'')}`.trim()}
+  function records(){
+    const source=Array.isArray(window.items)?window.items:[];
+    const out=[];
+    source.forEach((item,itemIndex)=>{
+      (item&&Array.isArray(item.measurementRecords)?item.measurementRecords:[]).forEach((m,index)=>out.push({item,itemIndex,m,index}));
+    });
+    return out;
+  }
+  function ipcLinks(itemIndex,recordIndex){
+    const state=window.ipcState&&window.ipcState.record;
+    const links=[];
+    (itemIndex>=0&&Array.isArray(window.items?.[itemIndex]?.ipcRecords)?window.items[itemIndex].ipcRecords:[]).forEach(ipc=>{
+      if(!ipc?.no||!Array.isArray(ipc.items))return;
+      const saved=ipc.items.find(x=>Number(x?.itemIndex)===itemIndex);
+      if(Array.isArray(saved?.evidence)&&saved.evidence.some(x=>Number(x)===recordIndex))links.push({no:String(ipc.no),qty:Number(saved.current)||0});
+    });
+    if(state?.no&&Array.isArray(state.items)){
+      const saved=state.items.find(x=>Number(x?.itemIndex)===itemIndex);
+      if(Array.isArray(saved?.evidence)&&saved.evidence.some(x=>Number(x)===recordIndex)&&!links.some(x=>x.no===state.no))links.push({no:String(state.no),qty:Number(saved.current)||0});
+    }
+    return links;
+  }
+  function breakdown(b){
+    const d=b?.detail||{};
+    const type=d.type||'General / L×W×H';
+    const element=[d.element,d.memberId].filter(Boolean).join(' · ')||'—';
+    const dims=[b?.length,b?.width,b?.height].filter(v=>v!==''&&v!=null).join(' × ');
+    const calc=d.calculation||[dims,b?.number!=null?`× ${b.number}`:'',b?.factor!=null?`× ${b.factor}`:''].filter(Boolean).join(' ');
+    const notes=[d.barMark&&`Bar Mark: ${d.barMark}`,d.barType&&`Bar Type / Shape: ${d.barType}`,d.deduction&&`Deduction: ${d.deduction}`,d.addition&&`Addition: ${d.addition}`,b?.note].filter(Boolean).join(' · ');
+    return `<tr><td>${esc(type)}</td><td>${esc(element)}</td><td>${esc(b?.length===''?'—':b?.length??'—')}</td><td>${esc(b?.width===''?'—':b?.width??'—')}</td><td>${esc(b?.height===''?'—':b?.height??'—')}</td><td>${esc(b?.number??'—')}</td><td>${esc(b?.factor??'—')}</td><td>${esc(calc||'—')}${notes?`<div class="small">${esc(notes)}</div>`:''}</td><td class="num">${b?.quantity==null?'—':fmt(b.quantity)}</td></tr>`;
+  }
+  function recordHtml(x){
+    const m=x.m||{},previous=m.previous==null?null:Number(m.previous),current=m.current==null?null:Number(m.current),cumulative=previous==null||current==null?null:previous+current;
+    const links=ipcLinks(x.itemIndex,x.index);
+    const bs=Array.isArray(m.breakdowns)?m.breakdowns:[];
+    const breakdownHtml=bs.length?`<div class="table-wrap"><table class="evidence-record-table"><thead><tr><th>Type</th><th>Element / Member ID</th><th>L</th><th>W</th><th>H / D / T</th><th>No.</th><th>Factor</th><th>Calculation / Basis</th><th class="num">Qty</th></tr></thead><tbody>${bs.map(breakdown).join('')}</tbody></table></div>`:'';
+    return `<div class="evidence-group"><div class="evidence-head"><div><strong>Record No.</strong><span>Record ${x.index+1}</span></div><div><strong>BOQ Item</strong><span>${esc(x.item?.no||'—')}</span></div><div><strong>Date</strong><span>${esc(m.date||'—')}</span></div><div><strong>Location / Reference</strong><span>${esc(m.location||'—')}</span></div><div><strong>Drawing / Reference</strong><span>${esc(m.drawingReference||'—')}</span></div></div><div class="table-wrap"><table class="evidence-record-table"><thead><tr><th>Work Description / Measurement Note</th><th class="num">Measured Qty</th><th class="num">Approved Qty</th><th class="num">Previous Certified Qty</th><th class="num">Current IPC Qty</th><th class="num">Cumulative Certified Qty</th><th>Remarks</th><th>IPC Evidence / Verification</th></tr></thead><tbody><tr><td>${esc(x.item?.desc||'—')}${m.note?`<div class="small">${esc(m.note)}</div>`:''}</td><td class="num">${unit(m.measured,x.item?.unit)}</td><td class="num">${unit(m.approved,x.item?.unit)}</td><td class="num">${unit(previous,x.item?.unit)}</td><td class="num">${unit(current,x.item?.unit)}</td><td class="num">${unit(cumulative,x.item?.unit)}</td><td>${esc(m.remarks||'—')}</td><td>${links.length?links.map(l=>`${esc(l.no)} · ${fmt(l.qty)} ${esc(x.item?.unit||'')}`).join('<br>'):'Record retained for Measurement / MB history; no current IPC linkage recorded.'}</td></tr></tbody></table></div>${breakdownHtml?`<div style="padding:4pt"><strong>Detailed Measurement Breakdown</strong>${breakdownHtml}</div>`:''}</div>`;
+  }
+  function linkedSectionHtml(){
+    const rows=records();
+    if(!rows.length)return '<p class="section-note">No saved Measurement / MB records are available.</p>';
+    return `<p class="section-note">Measurement / MB verification is read directly from the saved measurementRecords data. Records with Current IPC Qty = 0 are retained where they form part of the saved measurement history or evidence trail.</p>${rows.map(recordHtml).join('')}`;
+  }
+  function patch(html){
+    try{
+      const doc=new DOMParser().parseFromString(html,'text/html');
+      const target=[...doc.querySelectorAll('.section')].find(s=>/Measurement \/ MB Verification/i.test(s.querySelector('.section-title')?.textContent||''));
+      if(target)target.innerHTML=`<h2 class="section-title">4. Measurement / MB Verification</h2>${linkedSectionHtml()}`;
+      const state=window.ipcState&&window.ipcState.record||{};
+      const number=String(state.no||state.editingNo||'').trim();
+      if(number){
+        doc.querySelectorAll('.meta-row').forEach(row=>{if(/IPC \/ Running Bill No\./i.test(row.querySelector('strong')?.textContent||'')){const span=row.querySelector('span');if(span)span.textContent=number}});
+        doc.querySelectorAll('.mast .docref').forEach(el=>{if(el.textContent.trim()==='')el.textContent=number});
+      }
+      return '<!doctype html>'+doc.documentElement.outerHTML;
+    }catch(e){return html}
+  }
+  const nativeOpen=window.open;
+  window.open=function(){
+    const w=nativeOpen.apply(window,arguments);
+    if(!w||!w.document)return w;
+    const originalWrite=w.document.write.bind(w.document);
+    w.document.write=function(html){return originalWrite(patch(html))};
+    return w;
+  };
+})();
