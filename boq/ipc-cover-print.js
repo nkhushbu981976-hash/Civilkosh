@@ -40,12 +40,13 @@
         table.className='boq-valuation-table';
         table.innerHTML=`<thead><tr><th>Item No.</th><th>Description</th><th>Unit</th><th class="num">BOQ Qty</th><th class="num">Previous Qty</th><th class="num">Current Qty</th><th class="num">Cumulative Qty</th><th class="num">Balance Qty</th><th class="num">Rate</th><th class="num">Current Amount</th><th class="num">Cumulative Amount</th></tr></thead><tbody></tbody>`;
         const body=table.querySelector('tbody');
+        const formatBoqAmount=v=>{const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n):'0.00'};
         quantityRows.forEach((qRow,index)=>{
           const q=qRow.querySelectorAll('td');
           const a=amountRows[index]?.querySelectorAll('td');
           if(q.length!==8||!a||a.length!==7)return;
           const row=doc.createElement('tr');
-          row.innerHTML=`<td>${q[0].innerHTML}</td><td>${q[1].innerHTML}</td><td class="center nowrap">${q[2].innerHTML}</td><td class="num">${q[3].innerHTML}</td><td class="num">${q[4].innerHTML}</td><td class="num">${q[5].innerHTML}</td><td class="num">${q[6].innerHTML}</td><td class="num">${q[7].innerHTML}</td><td class="num">${a[2].innerHTML}</td><td class="num">${a[4].innerHTML}</td><td class="num">${a[5].innerHTML}</td>`;
+          row.innerHTML=`<td>${q[0].innerHTML}</td><td>${q[1].innerHTML}</td><td class="center nowrap">${q[2].innerHTML}</td><td class="num">${q[3].innerHTML}</td><td class="num">${q[4].innerHTML}</td><td class="num">${q[5].innerHTML}</td><td class="num">${q[6].innerHTML}</td><td class="num">${q[7].innerHTML}</td><td class="num">${a[2].innerHTML}</td><td class="num">${formatBoqAmount(q[5]?.textContent||0)}</td><td class="num">${formatBoqAmount(q[6]?.textContent||0)}</td>`;
           body.appendChild(row);
         });
         const note=boqSection.querySelector('.section-note');
