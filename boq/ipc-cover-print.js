@@ -62,6 +62,27 @@
         boqSection.appendChild(wrap);
       }
     }
+    const firstSection=doc.querySelector('.document>.section');
+    if(firstSection){
+      const detailPairs=[
+        ['Project / Work','Project / Work'],
+        ['Employer / Client','Employer / Client'],
+        ['Contractor','Contractor'],
+        ['Contract / Work Order No.','Work Order / Contract No.'],
+        ['Contract Amount','Accepted Contract Amount'],
+        ['IPC No.','IPC / Running Bill No.'],
+        ['Previous IPC No.','Previous IPC'],
+        ['Bill / Measurement Period','Billing / Measurement Period'],
+        ['Bill Date','Bill Date'],
+        ['Commencement Date','Commencement Date'],
+        ['Completion Date','Original Completion Date'],
+        ['MB / Measurement Reference','Measurement Book No.'],
+        ['Project Location','Location'],
+        ['Project / Reference No.','Project / Reference No.']
+      ].map(([label,key])=>({label,value:String(data[key]??'').trim()})).filter(x=>x.value&&x.value!=='—');
+      firstSection.innerHTML=`<h2 class="section-title">1. Contract &amp; Payment Details</h2><div class="ipc-contract-grid">${detailPairs.map(x=>`<div class="ipc-contract-field"><strong>${x.label}</strong><span>${x.value}</span></div>`).join('')}</div>`;
+      firstSection.classList.add('ipc-contract-section');
+    }
     const cover=doc.createElement('section');
     cover.className='ipc-cover';
     const field=(label,key,wide=false)=>`<div class="ipc-cover-field${wide?' wide':''}"><span>${label}</span><strong>${data[key]||'—'}</strong></div>`;
@@ -94,11 +115,9 @@
           <div><span>Approved By</span><strong>${certData['Approved By']||'—'}</strong></div>
         </div>
       </div>`;
-    const firstSection=doc.querySelector('.document>.section');
     const documentRoot=doc.querySelector('.document');
     mast.remove();
     meta.remove();
-    firstSection?.remove();
     if(documentRoot)documentRoot.insertBefore(cover,documentRoot.firstChild);
     const style=doc.createElement('style');
     style.textContent=`
@@ -123,6 +142,13 @@
       .ipc-cover-signatures>div:last-child{border-right:0}
       .ipc-cover-signatures span{font-size:7pt;color:#59615c;font-weight:700;text-transform:uppercase}
       .ipc-cover-signatures strong{display:block;margin-top:20pt;font-size:8pt;overflow-wrap:anywhere}
+      .ipc-contract-section{margin-top:9pt}
+      .ipc-contract-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #7c837e;break-inside:avoid;page-break-inside:avoid}
+      .ipc-contract-field{display:grid;grid-template-columns:44% 56%;min-width:0;padding:5.5pt 7pt;border-right:1px solid #c3c8c5;border-bottom:1px solid #c3c8c5;align-items:start}
+      .ipc-contract-field:nth-child(even){border-right:0}
+      .ipc-contract-field:nth-last-child(-n+2){border-bottom:0}
+      .ipc-contract-field strong{font-size:7.5pt;font-weight:700;line-height:1.25}
+      .ipc-contract-field span{font-size:8.2pt;min-width:0;overflow-wrap:anywhere;line-height:1.25}
       .boq-valuation-table{font-size:7.3pt;table-layout:fixed}
       .boq-valuation-table th:nth-child(1){width:5%}.boq-valuation-table th:nth-child(2){width:20%}.boq-valuation-table th:nth-child(3){width:5%}.boq-valuation-table th:nth-child(4){width:7%}.boq-valuation-table th:nth-child(5){width:9%}.boq-valuation-table th:nth-child(6){width:9%}.boq-valuation-table th:nth-child(7){width:10%}.boq-valuation-table th:nth-child(8){width:8%}.boq-valuation-table th:nth-child(9){width:10%}.boq-valuation-table th:nth-child(10){width:9.5%}.boq-valuation-table th:nth-child(11){width:8.5%}
       .boq-valuation-table th,.boq-valuation-table td{padding:4pt 2.5pt;overflow-wrap:anywhere;word-break:normal}
