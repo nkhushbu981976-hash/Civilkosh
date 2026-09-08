@@ -64,7 +64,7 @@
   function fmt(v){return Number.isFinite(Number(v))?Number(v).toFixed(2):'—'}
   function unit(v,u){return v==null?'—':`${fmt(v)} ${esc(u||'')}`.trim()}
   function records(){
-    const source=Array.isArray(window.items)?window.items:[];
+    const source=typeof items!=='undefined'&&Array.isArray(items)?items:[];
     const out=[];
     source.forEach((item,itemIndex)=>{
       (item&&Array.isArray(item.measurementRecords)?item.measurementRecords:[]).forEach((m,index)=>out.push({item,itemIndex,m,index}));
@@ -72,9 +72,10 @@
     return out;
   }
   function ipcLinks(itemIndex,recordIndex){
-    const state=window.ipcState&&window.ipcState.record;
+    const state=typeof ipcState!=='undefined'&&ipcState?.record?ipcState.record:null;
+    const source=typeof items!=='undefined'&&Array.isArray(items)?items:[];
     const links=[];
-    (itemIndex>=0&&Array.isArray(window.items?.[itemIndex]?.ipcRecords)?window.items[itemIndex].ipcRecords:[]).forEach(ipc=>{
+    (itemIndex>=0&&Array.isArray(source?.[itemIndex]?.ipcRecords)?source[itemIndex].ipcRecords:[]).forEach(ipc=>{
       if(!ipc?.no||!Array.isArray(ipc.items))return;
       const saved=ipc.items.find(x=>Number(x?.itemIndex)===itemIndex);
       if(Array.isArray(saved?.evidence)&&saved.evidence.some(x=>Number(x)===recordIndex))links.push({no:String(ipc.no),qty:Number(saved.current)||0});
@@ -111,7 +112,7 @@
       const doc=new DOMParser().parseFromString(html,'text/html');
       const target=[...doc.querySelectorAll('.section')].find(s=>/Measurement \/ MB Verification/i.test(s.querySelector('.section-title')?.textContent||''));
       if(target)target.innerHTML=`<h2 class="section-title">4. Measurement / MB Verification</h2>${linkedSectionHtml()}`;
-      const state=window.ipcState&&window.ipcState.record||{};
+      const state=typeof ipcState!=='undefined'&&ipcState?.record?ipcState.record:{};
       const number=String(state.no||state.editingNo||'').trim();
       if(number){
         doc.querySelectorAll('.meta-row').forEach(row=>{if(/IPC \/ Running Bill No\./i.test(row.querySelector('strong')?.textContent||'')){const span=row.querySelector('span');if(span)span.textContent=number}});
