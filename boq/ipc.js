@@ -13,7 +13,7 @@ function ipcPrevQty(item,beforeNo=''){const target=ipcOrdinal(beforeNo),itemInde
 function ipcSavedCurrent(item,no){const itemIndex=items.indexOf(item),r=(item.ipcRecords||[]).find(x=>x.no===no),saved=Array.isArray(r?.items)?r.items.find(x=>x.itemIndex===itemIndex):null;return saved?Number(saved.current)||0:null}
 function ipcMeasurementStats(item,beforeNo=''){const records=item?.measurementRecords||[],used=ipcPrevQty(item,beforeNo),measured=records.reduce((s,m)=>s+(Number.isFinite(Number(m.current))&&Number(m.current)>=0?Number(m.current):0),0),approved=records.reduce((s,m)=>s+(Number.isFinite(Number(m.approved))&&Number(m.approved)>=0?Number(m.approved):0),0),hasApproved=records.some(m=>Number.isFinite(Number(m.approved))&&Number(m.approved)>=0);return{records,used,measured,approved,hasApproved,unbilledMeasured:Math.max(0,measured-used),unbilledApproved:Math.max(0,approved-used),evidence:records.map((m,i)=>({index:i,record:i+1,date:m.date||'',location:m.location||'',drawingReference:m.drawingReference||'',current:Number(m.current)||0,approved:m.approved==null?null:Number(m.approved)})).filter(x=>x.current>0)}}
 function ipcMeasurementQty(item){const stats=ipcMeasurementStats(item);return stats.hasApproved?stats.unbilledApproved:stats.unbilledMeasured}
-function ipcCurrentQty(item){const itemIndex=items.indexOf(item),rec=ipcState.record?.items?.find(x=>x.itemIndex===itemIndex);if(rec&&Number(rec.current)>0)return Number(rec.current);if(rec&&Number(rec.current)===0){const stats=ipcMeasurementStats(item,ipcState.record?.editingNo||'');return stats.hasApproved?stats.unbilledApproved:stats.unbilledMeasured}return ipcState.record?.editingNo?Number(ipcSavedCurrent(item,ipcState.record.editingNo)||0):ipcMeasurementQty(item)}
+function ipcCurrentQty(item){const itemIndex=items.indexOf(item),editingNo=ipcState.record?.editingNo||'',rec=ipcState.record?.items?.find(x=>x.itemIndex===itemIndex);if(editingNo){if(rec)return Number(rec.current)||0;const saved=ipcSavedCurrent(item,editingNo);return saved==null?0:saved}if(rec)return Number(rec.current)||0;return ipcMeasurementQty(item)}
 function ipcTotals(){const no=ipcState.record?.editingNo||'';return items.map((item,i)=>{const previous=ipcPrevQty(item,no),current=ipcCurrentQty(item),cumulative=previous+current,stats=ipcMeasurementStats(item,no),evidence=stats.evidence.map(x=>x.index);return{itemIndex:i,previous,current,cumulative,balanceQty:item.qty-cumulative,previousAmount:previous*item.rate,currentAmount:current*item.rate,cumulativeAmount:cumulative*item.rate,balanceAmount:(item.qty-cumulative)*item.rate,measurementQty:stats.unbilledMeasured,approvedQty:stats.unbilledApproved,hasApproved:stats.hasApproved,evidence}})}
 function ipcSummary(rows){return rows.reduce((a,r)=>({previous:a.previous+r.previousAmount,current:a.current+r.currentAmount,cumulative:a.cumulative+r.cumulativeAmount,balance:a.balance+r.balanceAmount}),{previous:0,current:0,cumulative:0,balance:0})}
 function ipcAdj(id){const n=Number(ipc$(id)?.value);return Number.isFinite(n)&&n>=0?n:0}
@@ -39,18 +39,3 @@ function ipcSave(){ipcSync();if(!ipcState.record.no)ipcState.record.no=ipcState.
 function ipcAmountWords(n){const value=Math.round((Number(n)||0)*100)/100;if(value===0)return'Zero rupees only';const ones=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'],tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];const under100=x=>x<20?ones[x]:tens[Math.floor(x/10)]+(x%10?' '+ones[x%10]:'');const under1000=x=>x<100?under100(x):ones[Math.floor(x/100)]+' Hundred'+(x%100?' '+under100(x%100):'');const parts=[];let whole=Math.floor(value);[[10000000,'Crore'],[100000,'Lakh'],[1000,'Thousand'],[100,'Hundred']].forEach(([base,label])=>{if(whole>=base){const q=Math.floor(whole/base);parts.push(under1000(q)+' '+label);whole%=base}});if(whole)parts.push(under1000(whole));const paisa=Math.round((value-Math.floor(value))*100);return parts.join(' ')+(paisa?' rupees and '+under100(paisa)+' paisa only':' rupees only')}
 function initIPC(){if(ipc$('ipcRoot'))return;const basis=document.querySelector('.basis-panel');if(!basis)return;const section=document.createElement('section');section.className='boq-panel';section.id='ipcRoot';section.innerHTML='<div class="panel-head"><div><span class="panel-kicker">IPC / RUNNING BILL</span><h2>Payment & Certification Workflow</h2></div><span class="panel-note">Uses saved BOQ items and measurement history</span></div><div class="ipc-body"><p class="muted-note">Preparing IPC workflow…</p></div>';basis.parentNode.insertBefore(section,basis);const originalRender=window.render;if(typeof originalRender==='function')window.render=()=>{originalRender();ipcRender()};ipcRender()}
 document.addEventListener('DOMContentLoaded',initIPC);
-
-/* Saved IPC records are authoritative for an edit, including an intentional zero.
-   A new unsaved IPC may derive its current quantity from unbilled measurement evidence,
-   but editing a saved IPC must never silently recompute its certified quantity. */
-const ipcCurrentQtyOriginal=ipcCurrentQty;
-ipcCurrentQty=function(item){
-  const editingNo=ipcState.record?.editingNo||'';
-  if(editingNo){
-    const itemIndex=items.indexOf(item);
-    const saved=ipcState.record?.items?.find(x=>x.itemIndex===itemIndex);
-    if(saved)return Number(saved.current)||0;
-    return Number(ipcSavedCurrent(item,editingNo)||0);
-  }
-  return ipcCurrentQtyOriginal(item);
-};
