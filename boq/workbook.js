@@ -1,159 +1,31 @@
 (function(){
-  'use strict';
-  if(window.__civilKoshWorkbookInstalled)return;
-  window.__civilKoshWorkbookInstalled=true;
-  const escW=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
-  const numW=v=>{const n=Number(v);return Number.isFinite(n)?n:0};
-  const fmtW=v=>typeof fmt==='function'?fmt(numW(v)):numW(v).toFixed(2);
-  const moneyW=v=>typeof money==='function'?money(v):`NPR ${fmtW(v)}`;
-  const navItems=[['boqMaster','BOQ MASTER'],['measurementMb','MEASUREMENT / MB'],['quantityAbstract','QUANTITY ABSTRACT'],['rateAnalysisRoot','RATE ANALYSIS'],['ipcRoot','IPC / RUNNING BILL'],['variationSection','VARIATION'],['evidenceSection','EVIDENCE & DOCUMENTS'],['reportsPrint','REPORTS / PRINT']];
-
-  function installStyle(){
-    if(document.getElementById('civilkoshWorkbookStyle'))return;
-    const style=document.createElement('style');
-    style.id='civilkoshWorkbookStyle';
-    style.textContent=`
-      .ck-workbook-shell{grid-column:1 / -1;width:100%;min-width:0;margin:0 0 16px;border:1px solid #c8d0cb;border-radius:8px;background:#f4f6f5;box-shadow:0 2px 8px rgba(32,37,34,.05);overflow:hidden;position:sticky;top:0;z-index:30}
-      .ck-workbook-titlebar{display:flex;align-items:center;min-height:38px;padding:7px 12px;background:#e7ece9;border-bottom:1px solid #c8d0cb;color:#25312c}
-      .ck-workbook-title{font-size:12px;font-weight:850;letter-spacing:.12em;line-height:1;text-transform:uppercase}
-      .ck-workbook-subtitle{margin-left:10px;color:#68746e;font-size:10px;font-weight:600;letter-spacing:.02em}
-      .ck-workbook-nav{display:block;width:100%;box-sizing:border-box;padding:0 7px;background:#eef1ef}
-      .ck-workbook-nav-inner{display:flex;align-items:flex-end;gap:3px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;white-space:nowrap;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
-      .ck-workbook-nav a{position:relative;display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;min-height:34px;margin-top:5px;padding:6px 11px;border:1px solid #c5ceca;border-bottom-color:#b9c4be;border-radius:6px 6px 0 0;background:#f9faf9;color:#44514b;text-decoration:none;font-size:10.5px;font-weight:800;letter-spacing:.035em;line-height:1;outline:none}
-      .ck-workbook-nav a:hover{background:#fff;color:#24312b}
-      .ck-workbook-nav a:focus-visible{z-index:2;box-shadow:0 0 0 2px rgba(22,113,91,.22)}
-      .ck-workbook-nav a[aria-current="page"]{margin-top:2px;min-height:37px;border-color:#aebbb4;border-bottom-color:#fff;background:#fff;color:#123f32;box-shadow:0 -2px 0 #16715b inset}
-      .ck-workbook-nav a[aria-current="page"]:before{content:"";position:absolute;top:-1px;left:10px;right:10px;height:2px;border-radius:2px;background:#16715b}
-      #quantityAbstract{grid-column:1 / -1;scroll-margin-top:92px;margin-top:12px}
-      #quantityAbstract .panel-head{margin-bottom:5px}
-      .ck-abstract-note{font-size:12px;color:#5b635e;margin:0 0 8px}
-      .ck-abstract-wrap{overflow-x:auto}
-      .ck-abstract-table{min-width:1180px;font-size:11.5px}
-      .ck-abstract-table th,.ck-abstract-table td{padding:5px 6px;vertical-align:middle}
-      .ck-abstract-table th{white-space:nowrap}
-      .ck-abstract-table td.num{white-space:nowrap}
-      .ck-abstract-table .ck-progress{min-width:72px}
-      .ck-source-links{display:flex;gap:7px;flex-wrap:wrap;margin-top:4px}
-      .ck-source-link{font-size:10px;line-height:1.2;color:#16715b;text-decoration:underline;text-underline-offset:2px;cursor:pointer;white-space:nowrap;font-weight:700}
-      .ck-row-link{font-size:10.5px;margin-left:5px;color:#16715b;text-decoration:underline;text-underline-offset:2px;cursor:pointer;white-space:nowrap;font-weight:700}
-      .ck-linked-row{scroll-margin-top:96px}
-      #boqMaster,#measurementMb,#rateAnalysisRoot,#ipcRoot,#variationSection,#evidenceSection,#reportsPrint{scroll-margin-top:96px}
-      @media(max-width:700px){
-        .ck-workbook-shell{margin-left:-4px;margin-right:-4px;width:calc(100% + 8px);border-radius:6px}
-        .ck-workbook-titlebar{min-height:34px;padding:6px 10px}
-        .ck-workbook-title{font-size:10.5px}
-        .ck-workbook-subtitle{display:none}
-        .ck-workbook-nav{padding:0 4px}
-        .ck-workbook-nav a{min-height:32px;padding:6px 9px;font-size:10px}
-        .ck-workbook-nav a[aria-current="page"]{min-height:35px}
-        .ck-abstract-table{font-size:11px}
-        .ck-source-link,.ck-row-link{font-size:10px}
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  function ensureAnchor(id,element){if(!element)return null;element.id=id;return element}
-  function locateAnchors(){
-    const layout=document.querySelector('.boq-layout');
-    ensureAnchor('boqMaster',layout);
-    ensureAnchor('measurementMb',document.querySelector('.summary-grid'));
-    const rate=document.getElementById('rateAnalysisRoot');if(rate)ensureAnchor('rateAnalysisRoot',rate);
-    const ipc=document.getElementById('ipcRoot');if(ipc)ensureAnchor('ipcRoot',ipc);
-    const variation=document.querySelector('[data-variation-fields]');if(variation)ensureAnchor('variationSection',variation);
-    const evidence=ipc?[...ipc.querySelectorAll('details')].find(x=>/IPC Evidence \/ Document Register/i.test(x.querySelector('summary')?.textContent||'')):null;if(evidence)ensureAnchor('evidenceSection',evidence);
-    const reports=document.querySelector('.boq-actions');if(reports)ensureAnchor('reportsPrint',reports);
-  }
-  function openTarget(target){
-    if(!target)return;
-    const detail=target.closest('details');if(detail)detail.open=true;
-    target.scrollIntoView({behavior:'smooth',block:'start'});
-    history.replaceState(null,'',`#${target.id}`);
-    setActiveTab(target.id);
-  }
-  function setActiveTab(id){
-    const nav=document.getElementById('civilkoshWorkbookNav');if(!nav)return;
-    nav.querySelectorAll('a[data-workbook-target]').forEach(a=>a.setAttribute('aria-current',a.dataset.workbookTarget===id?'page':''));
-  }
-  function renderNav(){
-    locateAnchors();
-    const host=document.querySelector('.boq-section>.container');if(!host)return;
-    let shell=document.getElementById('civilkoshWorkbookShell');
-    if(!shell){
-      shell=document.createElement('section');
-      shell.id='civilkoshWorkbookShell';
-      shell.className='ck-workbook-shell';
-      shell.setAttribute('aria-label','Project Workbook');
-      host.insertBefore(shell,host.firstElementChild);
-    }
-    shell.innerHTML=`<div class="ck-workbook-titlebar"><span class="ck-workbook-title">PROJECT WORKBOOK</span><span class="ck-workbook-subtitle">Linked project control sheets</span></div><div id="civilkoshWorkbookNav" class="ck-workbook-nav" role="tablist" aria-label="Project workbook sheets"><div class="ck-workbook-nav-inner">${navItems.map(([id,label])=>`<a href="#${id}" data-workbook-target="${id}" role="tab">${label}</a>`).join('')}</div></div>`;
-    shell.querySelectorAll('a[data-workbook-target]').forEach(a=>a.addEventListener('click',e=>{const target=document.getElementById(a.dataset.workbookTarget);if(!target)return;e.preventDefault();openTarget(target)}));
-    const hash=location.hash.replace(/^#/,'');
-    const initial=navItems.some(([id])=>id===hash)?hash:'boqMaster';
-    setActiveTab(initial);
-  }
-
-  function savedRows(item,index){
-    const records=Array.isArray(item?.ipcRecords)?item.ipcRecords.filter(r=>r&&r.no):[];
-    const byNo=new Map();records.forEach(r=>{if(!byNo.has(r.no))byNo.set(r.no,r)});
-    const unique=[...byNo.values()].sort((a,b)=>(typeof ipcOrdinal==='function'?ipcOrdinal(a.no):0)-(typeof ipcOrdinal==='function'?ipcOrdinal(b.no):0));
-    const active=typeof ipcState!=='undefined'?ipcState.record:null;let previous=0,current=0;
-    if(active?.editingNo){previous=typeof ipcPrevQty==='function'?ipcPrevQty(item,active.editingNo):unique.filter(r=>(typeof ipcOrdinal==='function'?ipcOrdinal(r.no):0)<(typeof ipcOrdinal==='function'?ipcOrdinal(active.editingNo):0)).reduce((s,r)=>s+numW(r.items?.find(x=>x.itemIndex===index)?.current),0);current=numW(active.items?.find(x=>x.itemIndex===index)?.current)}
-    else if(active?.no&&Array.isArray(active.items)&&active.items.length){previous=unique.reduce((s,r)=>s+numW(r.items?.find(x=>x.itemIndex===index)?.current),0);current=numW(active.items.find(x=>x.itemIndex===index)?.current)}
-    else if(unique.length){const latest=unique[unique.length-1];current=numW(latest.items?.find(x=>x.itemIndex===index)?.current);previous=unique.slice(0,-1).reduce((s,r)=>s+numW(r.items?.find(x=>x.itemIndex===index)?.current),0)}
-    const cumulative=previous+current;const limit=typeof variationAllowedQty==='function'?numW(variationAllowedQty(item)):numW(item.qty);const balance=limit-cumulative;const progress=limit>0?Math.max(0,cumulative/limit*100):0;
-    return{previous,current,cumulative,limit,balance,progress,previousAmount:previous*numW(item.rate),currentAmount:current*numW(item.rate),cumulativeAmount:cumulative*numW(item.rate)};
-  }
-
-  function renderAbstract(){
-    if(typeof items==='undefined')return;
-    const host=document.getElementById('quantityAbstract');if(!host||!Array.isArray(items))return;
-    const rows=items.map((item,i)=>({item,data:savedRows(item,i),index:i}));
-    host.innerHTML=`<div class="panel-head"><div><span class="panel-kicker">QUANTITY ABSTRACT</span><h2>Certified Quantity &amp; Payment Bridge</h2></div><span class="panel-note">Linked to saved Measurement / MB and IPC history</span></div><p class="ck-abstract-note">Certified quantities are derived from the existing saved IPC history; Measurement / MB remains the supporting quantity and verification source. No duplicate quantity entry is required here.</p><div class="ck-abstract-wrap"><table class="boq-table ck-abstract-table"><thead><tr><th>Item No.</th><th>Description</th><th>Unit</th><th class="num">BOQ Qty</th><th class="num">Previous Certified Qty</th><th class="num">Current Certified Qty</th><th class="num">Cumulative Certified Qty</th><th class="num">Balance Qty</th><th class="num">Rate</th><th class="num">Previous Amount</th><th class="num">Current Amount</th><th class="num">Cumulative Amount</th><th class="num ck-progress">Progress %</th></tr></thead><tbody>${rows.length?rows.map(({item,data,index})=>`<tr><td>${escW(item.no)}</td><td>${escW(item.desc)}<div class="ck-source-links"><a href="#boqMaster" class="ck-source-link" data-boq-item="${index}">View BOQ</a><a href="#measurementMb" class="ck-source-link" data-measurement-item="${index}">View Measurements</a><a href="#ipcRoot" class="ck-source-link" data-ipc-item="${index}">View IPC</a></div></td><td>${escW(item.unit)}</td><td class="num">${fmtW(item.qty)}</td><td class="num">${fmtW(data.previous)}</td><td class="num">${fmtW(data.current)}</td><td class="num">${fmtW(data.cumulative)}</td><td class="num">${fmtW(data.balance)}</td><td class="num">${moneyW(item.rate)}</td><td class="num">${moneyW(data.previousAmount)}</td><td class="num">${moneyW(data.currentAmount)}</td><td class="num">${moneyW(data.cumulativeAmount)}</td><td class="num">${fmtW(data.progress)}%</td></tr>`).join(''):'<tr><td colspan="13">No saved BOQ items yet.</td></tr>'}</tbody></table></div>`;
-    bindSourceLinks();
-  }
-
-  function installAbstract(){
-    const summary=document.querySelector('.summary-grid');
-    if(!summary||document.getElementById('quantityAbstract'))return;
-    const section=document.createElement('section');section.id='quantityAbstract';section.className='boq-panel';summary.after(section);renderAbstract();
-  }
-  function focusBoq(index){const row=document.getElementById(`ck-boq-item-${index}`);openTarget(row||document.getElementById('boqMaster'));}
-  function focusMeasurement(index,recordIndex){const sel=document.getElementById('measurementMbItem');if(sel){sel.value=String(index);sel.dispatchEvent(new Event('change'))}setTimeout(()=>openTarget(document.getElementById(`ck-measurement-record-${index}-${recordIndex}`)||document.getElementById('measurementMb')),0)}
-  function focusIpc(){openTarget(document.getElementById('ipcRoot'));}
-  function bindSourceLinks(){
-    const root=document.getElementById('quantityAbstract');if(!root)return;
-    root.querySelectorAll('[data-boq-item]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();focusBoq(Number(a.dataset.boqItem))}));
-    root.querySelectorAll('[data-measurement-item]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();focusMeasurement(Number(a.dataset.measurementItem),-1)}));
-    root.querySelectorAll('[data-ipc-item]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();focusIpc()}));
-  }
-  function decorateBoq(){
-    const body=document.getElementById('boqRows');if(!body)return;
-    [...body.querySelectorAll('tr')].forEach((row,index)=>{if(index>=((typeof items!=='undefined'&&Array.isArray(items))?items.length:0))return;row.id=`ck-boq-item-${index}`;row.classList.add('ck-linked-row');const cell=row.cells?.[0];if(cell&&!cell.querySelector('[data-boq-source]')){const link=document.createElement('a');link.className='ck-row-link';link.href='#measurementMb';link.dataset.boqSource='';link.textContent='View Measurements';link.addEventListener('click',e=>{e.preventDefault();focusMeasurement(index,-1)});cell.appendChild(link)}});
-  }
-  function decorateMeasurement(){
-    const body=document.getElementById('measurementMbRows');if(!body)return;const rows=[];
-    if(typeof items!=='undefined'&&Array.isArray(items))items.forEach((item,itemIndex)=>(item?.measurementRecords||[]).forEach((record,recordIndex)=>rows.push({item,itemIndex,record,recordIndex})));
-    [...body.querySelectorAll('tr')].filter(x=>!x.classList.contains('mb-detail-row')).forEach((row,i)=>{const x=rows[i];if(!x)return;row.id=`ck-measurement-record-${x.itemIndex}-${x.recordIndex}`;row.classList.add('ck-linked-row');const cell=row.cells?.[2];if(cell&&!cell.querySelector('[data-boq-source]')){const link=document.createElement('a');link.className='ck-row-link';link.href='#boqMaster';link.dataset.boqSource='';link.textContent='View BOQ';link.addEventListener('click',e=>{e.preventDefault();focusBoq(x.itemIndex)});cell.appendChild(link)}});
-  }
-  function decorateIpc(){
-    const root=document.getElementById('ipcRoot');if(!root)return;const table=[...root.querySelectorAll('.boq-table')].find(t=>t.querySelector('th')?.textContent?.trim()==='Item');if(!table)return;
-    table.querySelectorAll('tbody tr').forEach((row,index)=>{if(typeof items==='undefined'||!items[index])return;row.id=`ck-ipc-item-${index}`;row.classList.add('ck-linked-row');const cell=row.cells?.[0];if(cell&&!cell.querySelector('[data-mb-source]')){const link=document.createElement('a');link.className='ck-row-link';link.href='#measurementMb';link.dataset.mbSource='';link.textContent='View MB';link.addEventListener('click',e=>{e.preventDefault();focusMeasurement(index,-1)});cell.appendChild(link)}});
-  }
-  function decorate(){decorateBoq();decorateMeasurement();decorateIpc();}
-  function refresh(){renderAbstract();renderNav();decorate();}
-  function wrapGlobal(name,after){const original=window[name];if(typeof original!=='function'||original.__workbookWrapped)return;const wrapped=function(){const result=original.apply(this,arguments);after();return result};wrapped.__workbookWrapped=true;window[name]=wrapped;}
-  function observeActiveSections(){
-    if(!('IntersectionObserver'in window))return;
-    const targets=navItems.map(([id])=>document.getElementById(id)).filter(Boolean);
-    const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting)setActiveTab(entry.target.id)})},{root:null,rootMargin:'-88px 0px -60% 0px',threshold:0});
-    targets.forEach(target=>observer.observe(target));
-  }
-  function install(){
-    installStyle();installAbstract();refresh();wrapGlobal('render',refresh);wrapGlobal('ipcRender',refresh);wrapGlobal('saveMeasurement',refresh);
-    observeActiveSections();
-    const observer=new MutationObserver(()=>{if(!document.getElementById('quantityAbstract'))installAbstract();locateAnchors();decorate()});
-    const root=document.querySelector('.boq-section>.container');if(root)observer.observe(root,{childList:true,subtree:true});
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+'use strict';
+if(window.__civilKoshWorkbookInstalled)return;
+window.__civilKoshWorkbookInstalled=true;
+const tabs=[['boqMaster','BOQ MASTER'],['measurementMb','MEASUREMENT / MB'],['quantityAbstract','QUANTITY ABSTRACT'],['rateAnalysisRoot','RATE ANALYSIS'],['ipcRoot','IPC / RUNNING BILL'],['variationSection','VARIATION'],['evidenceSection','EVIDENCE & DOCUMENTS'],['reportsPrint','REPORTS / PRINT']];
+const escW=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
+const n=v=>{const x=Number(v);return Number.isFinite(x)?x:0};
+const f=v=>typeof fmt==='function'?fmt(n(v)):n(v).toFixed(2);
+const m=v=>typeof money==='function'?money(v):`NPR ${f(v)}`;
+function css(){if(document.getElementById('civilkoshWorkbookStyle'))return;const s=document.createElement('style');s.id='civilkoshWorkbookStyle';s.textContent=`
+.ck-workbook-shell{grid-column:1/-1;width:100%;min-width:0;margin:0 0 16px;border:1px solid #c8d0cb;border-radius:8px;background:#f4f6f5;box-shadow:0 2px 8px rgba(32,37,34,.05);overflow:hidden;position:sticky;top:0;z-index:30}.ck-workbook-titlebar{display:flex;align-items:center;min-height:38px;padding:7px 12px;background:#e7ece9;border-bottom:1px solid #c8d0cb;color:#25312c}.ck-workbook-title{font-size:12px;font-weight:850;letter-spacing:.12em;line-height:1;text-transform:uppercase}.ck-workbook-subtitle{margin-left:10px;color:#68746e;font-size:10px;font-weight:600}.ck-workbook-nav{display:block;width:100%;box-sizing:border-box;padding:0 7px;background:#eef1ef}.ck-workbook-nav-inner{display:flex;align-items:flex-end;gap:3px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;white-space:nowrap;-webkit-overflow-scrolling:touch}.ck-workbook-nav a{position:relative;display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;min-height:34px;margin-top:5px;padding:6px 11px;border:1px solid #c5ceca;border-bottom-color:#b9c4be;border-radius:6px 6px 0 0;background:#f9faf9;color:#44514b;text-decoration:none;font-size:10.5px;font-weight:800;letter-spacing:.035em;line-height:1;outline:none}.ck-workbook-nav a:hover{background:#fff;color:#24312b}.ck-workbook-nav a[aria-current="page"]{margin-top:2px;min-height:37px;border-color:#aebbb4;border-bottom-color:#fff;background:#fff;color:#123f32;box-shadow:0 -2px 0 #16715b inset}.ck-workbook-nav a[aria-current="page"]:before{content:"";position:absolute;top:-1px;left:10px;right:10px;height:2px;border-radius:2px;background:#16715b}
+.ck-sheet{grid-column:1/-1;scroll-margin-top:96px;margin:0 0 14px;border:1px solid #c8d0cb;border-radius:8px;background:#fff;overflow:hidden;box-shadow:0 1px 5px rgba(32,37,34,.04)}.ck-sheet-head{padding:9px 11px;background:#eef1ef;border-bottom:1px solid #c8d0cb}.ck-sheet-title{font-size:12px;font-weight:850;letter-spacing:.06em;color:#24312b}.ck-sheet-note{margin-top:2px;font-size:10px;color:#65716b}.ck-sheet-body{padding:8px}.ck-sheet-scroll{overflow-x:auto}.ck-sheet-table{width:100%;min-width:900px;border-collapse:collapse;font-size:11px}.ck-sheet-table th,.ck-sheet-table td{border:1px solid #c8d0cb;padding:5px 6px;vertical-align:middle}.ck-sheet-table th{background:#e7ece9;color:#35423c;font-weight:800;white-space:nowrap;text-align:left}.ck-sheet-table tbody tr:nth-child(even){background:#fafbfa}.ck-sheet-table td.num{text-align:right;white-space:nowrap}.ck-sheet-help{margin:0 0 7px;color:#5b635e;font-size:10.5px}.ck-sheet-link{border:0;background:none;padding:0;margin-left:6px;color:#16715b;text-decoration:underline;cursor:pointer;font-size:10px;font-weight:700}.ck-linked-row{scroll-margin-top:96px}.ck-source-links{display:flex;gap:7px;flex-wrap:wrap;margin-top:4px}.ck-source-link{font-size:10px;color:#16715b;text-decoration:underline;cursor:pointer;font-weight:700}.ck-abstract-wrap{overflow-x:auto}.ck-abstract-table{min-width:1180px;font-size:11.5px}.ck-abstract-table th,.ck-abstract-table td{padding:5px 6px}.ck-abstract-note{font-size:12px;color:#5b635e;margin:0 0 8px}
+#boqMaster,#measurementMb,#rateAnalysisRoot,#ipcRoot,#variationSection,#evidenceSection,#reportsPrint{scroll-margin-top:96px}@media(max-width:700px){.ck-workbook-shell{margin-left:-4px;margin-right:-4px;width:calc(100% + 8px);border-radius:6px}.ck-workbook-titlebar{min-height:34px;padding:6px 10px}.ck-workbook-title{font-size:10.5px}.ck-workbook-subtitle{display:none}.ck-workbook-nav{padding:0 4px}.ck-workbook-nav a{min-height:32px;padding:6px 9px;font-size:10px}.ck-workbook-nav a[aria-current="page"]{min-height:35px}.ck-sheet-table{font-size:10.5px}}
+`;document.head.appendChild(s)}
+function anchors(){const layout=document.querySelector('.boq-layout');if(layout)layout.id='boqMaster';const mb=document.querySelector('.summary-grid');if(mb)mb.id='measurementMb';const rate=document.getElementById('rateAnalysisRoot');if(rate)rate.id='rateAnalysisRoot';const ipc=document.getElementById('ipcRoot');if(ipc){const e=[...ipc.querySelectorAll('details')].find(x=>/IPC Evidence \/ Document Register/i.test(x.querySelector('summary')?.textContent||''));if(e)e.id='evidenceSection'}const v=document.querySelector('[data-variation-fields]');if(v)v.id='variationSection';const p=document.querySelector('.boq-actions');if(p)p.id='reportsPrint'}
+function active(id){document.querySelectorAll('#civilkoshWorkbookNav a').forEach(a=>a.setAttribute('aria-current',a.dataset.workbookTarget===id?'page':''))}
+function jump(id){const el=document.getElementById(id);if(!el)return;const d=el.closest('details');if(d)d.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});history.replaceState(null,'','#'+id);active(id)}
+function nav(){anchors();const host=document.querySelector('.boq-section>.container');if(!host)return;let shell=document.getElementById('civilkoshWorkbookShell');if(!shell){shell=document.createElement('section');shell.id='civilkoshWorkbookShell';shell.className='ck-workbook-shell';shell.setAttribute('aria-label','Project Workbook');host.insertBefore(shell,host.firstElementChild)}shell.innerHTML='<div class="ck-workbook-titlebar"><span class="ck-workbook-title">PROJECT WORKBOOK</span><span class="ck-workbook-subtitle">Linked project control sheets</span></div><div id="civilkoshWorkbookNav" class="ck-workbook-nav" role="tablist" aria-label="Project workbook sheets"><div class="ck-workbook-nav-inner">'+tabs.map(([id,label])=>'<a href="#'+id+'" data-workbook-target="'+id+'" role="tab">'+label+'</a>').join('')+'</div></div>';shell.querySelectorAll('a[data-workbook-target]').forEach(a=>a.onclick=e=>{e.preventDefault();openTab(a.dataset.workbookTarget)});active(tabs.some(x=>x[0]===location.hash.slice(1))?location.hash.slice(1):'boqMaster')}
+function data(){return typeof items!=='undefined'&&Array.isArray(items)?items:[]}
+function linkBoq(i){const row=document.getElementById('ck-boq-'+i);if(row){row.scrollIntoView({behavior:'smooth',block:'center'});return}jump('boqMaster')}
+function linkMb(i){const sel=document.getElementById('measurementItem');if(sel){sel.value=String(i);sel.dispatchEvent(new Event('change'))}jump('measurementMb')}
+function addAbstract(){if(document.getElementById('quantityAbstract'))return;const host=document.querySelector('.summary-grid');if(!host)return;const s=document.createElement('section');s.id='quantityAbstract';s.className='boq-panel';host.after(s);renderAbstract()}
+function saved(item,i){const rec=(item.ipcRecords||[]).filter(r=>r&&r.no);const ord=r=>typeof ipcOrdinal==='function'?ipcOrdinal(r.no):0;rec.sort((a,b)=>ord(a)-ord(b));let prev=0,cur=0;const activeRec=typeof ipcState!=='undefined'?ipcState.record:null;if(activeRec?.editingNo){prev=typeof ipcPrevQty==='function'?n(ipcPrevQty(item,activeRec.editingNo)):rec.filter(r=>ord(r.no)<ord(activeRec.editingNo)).reduce((s,r)=>s+n(r.items?.find(x=>x.itemIndex===i)?.current),0);cur=n(activeRec.items?.find(x=>x.itemIndex===i)?.current)}else if(rec.length){const last=rec[rec.length-1];cur=n(last.items?.find(x=>x.itemIndex===i)?.current);prev=rec.slice(0,-1).reduce((s,r)=>s+n(r.items?.find(x=>x.itemIndex===i)?.current),0)}const cum=prev+cur;const limit=typeof variationAllowedQty==='function'?n(variationAllowedQty(item)):n(item.qty);return{prev,cur,cum,balance:limit-cum,progress:limit?Math.max(0,cum/limit*100):0,prevAmount:prev*n(item.rate),curAmount:cur*n(item.rate),cumAmount:cum*n(item.rate)}}
+function renderAbstract(){const host=document.getElementById('quantityAbstract');if(!host)return;const r=data();host.innerHTML='<div class="panel-head"><div><span class="panel-kicker">QUANTITY ABSTRACT</span><h2>Certified Quantity &amp; Payment Bridge</h2></div><span class="panel-note">Derived from existing BOQ and IPC history</span></div><p class="ck-abstract-note">Read-only derived view. No duplicate quantity entry is created here.</p><div class="ck-abstract-wrap"><table class="boq-table ck-abstract-table"><thead><tr><th>Item No.</th><th>Description</th><th>Unit</th><th>BOQ Qty</th><th>Previous Certified Qty</th><th>Current Certified Qty</th><th>Cumulative Certified Qty</th><th>Balance Qty</th><th>Rate</th><th>Previous Amount</th><th>Current Amount</th><th>Cumulative Amount</th><th>Progress %</th></tr></thead><tbody>'+r.map((x,i)=>{const q=saved(x,i);return '<tr><td>'+escW(x.no)+'</td><td>'+escW(x.desc)+'<div class="ck-source-links"><a class="ck-source-link" data-boq="'+i+'">View BOQ</a><a class="ck-source-link" data-mb="'+i+'">View Measurements</a><a class="ck-source-link" data-ipc>View IPC</a></div></td><td>'+escW(x.unit)+'</td><td class="num">'+f(x.qty)+'</td><td class="num">'+f(q.prev)+'</td><td class="num">'+f(q.cur)+'</td><td class="num">'+f(q.cum)+'</td><td class="num">'+f(q.balance)+'</td><td class="num">'+m(x.rate)+'</td><td class="num">'+m(q.prevAmount)+'</td><td class="num">'+m(q.curAmount)+'</td><td class="num">'+m(q.cumAmount)+'</td><td class="num">'+f(q.progress)+'%</td></tr>'}).join('')+'</tbody></table></div>';host.querySelectorAll('[data-boq]').forEach(a=>a.onclick=()=>linkBoq(Number(a.dataset.boq)));host.querySelectorAll('[data-mb]').forEach(a=>a.onclick=()=>linkMb(Number(a.dataset.mb)));host.querySelectorAll('[data-ipc]').forEach(a=>a.onclick=()=>jump('ipcRoot'))}
+function decorate(){const r=data();const body=document.getElementById('boqRows');if(body)[...body.querySelectorAll('tr')].forEach((row,i)=>{if(!r[i])return;row.id='ck-boq-'+i;if(!row.querySelector('.ck-row-link')){const a=document.createElement('a');a.className='ck-row-link';a.textContent='View Measurements';a.href='#measurementMb';a.onclick=e=>{e.preventDefault();linkMb(i)};row.cells?.[0]?.appendChild(a)}});const mb=document.getElementById('measurementMbRows');if(mb){const rec=[];r.forEach((x,i)=>(x.measurementRecords||[]).forEach((z,j)=>rec.push([i,j,z])));[...mb.querySelectorAll('tr')].filter(x=>!x.classList.contains('mb-detail-row')).forEach((row,k)=>{const x=rec[k];if(!x)return;row.id='ck-mb-'+x[0]+'-'+x[1];if(!row.querySelector('.ck-row-link')){const a=document.createElement('a');a.className='ck-row-link';a.textContent='View BOQ';a.href='#boqMaster';a.onclick=e=>{e.preventDefault();linkBoq(x[0])};row.cells?.[2]?.appendChild(a)}})}}
+function boqSheet(){const r=data();const rows=r.map((x,i)=>'<tr><td>'+escW(x.no)+'</td><td>'+escW(x.section)+'</td><td>'+escW(x.desc)+'</td><td>'+escW(x.unit)+'</td><td class="num">'+f(x.qty)+'</td><td class="num">'+m(x.rate)+'</td><td class="num">'+m(n(x.qty)*n(x.rate))+'</td><td>'+escW(x.remarks||'')+'</td><td><button class="ck-sheet-link" data-mb="'+i+'">View Measurements</button></td></tr>').join('');return '<p class="ck-sheet-help">Presentation layer over the existing BOQ master. Editing remains in the existing BOQ editor; no duplicate BOQ data is stored.</p><div class="ck-sheet-scroll"><table class="ck-sheet-table"><thead><tr><th>Item No.</th><th>Section</th><th>Description</th><th>Unit</th><th>BOQ Qty</th><th>Rate</th><th>Amount</th><th>Remarks</th><th>Links</th></tr></thead><tbody>'+(rows||'<tr><td colspan="9">No BOQ items yet.</td></tr>')+'</tbody></table></div>'}
+function mbSheet(){const out=[];data().forEach((x,i)=>(x.measurementRecords||[]).forEach((z,j)=>out.push('<tr><td>Record '+(j+1)+'</td><td>'+escW(x.no)+'</td><td>'+escW(x.desc)+'</td><td>'+escW(z.date||'—')+'</td><td>'+escW(z.location||'—')+'</td><td>'+escW(z.drawingReference||'—')+'</td><td class="num">'+(z.measured==null?'—':f(z.measured))+'</td><td class="num">'+(z.approved==null?'—':f(z.approved))+'</td><td class="num">'+(z.current==null?'—':f(z.current))+'</td><td><button class="ck-sheet-link" data-boq="'+i+'">View BOQ</button></td></tr>')));return '<p class="ck-sheet-help">Presentation layer over existing saved measurementRecords. Measurement editing and saving remain in the existing Measurement / MB controls.</p><div class="ck-sheet-scroll"><table class="ck-sheet-table"><thead><tr><th>Record</th><th>BOQ Item</th><th>Description</th><th>Date</th><th>Location / Reference</th><th>Drawing / Ref.</th><th>Measured Qty</th><th>Approved Qty</th><th>Current Qty</th><th>Links</th></tr></thead><tbody>'+(out.join('')||'<tr><td colspan="10">No saved Measurement / MB records yet.</td></tr>')+'</tbody></table></div>'}
+function openSheet(id){if(id==='boqMaster'||id==='measurementMb'){const old=document.getElementById('ck-active-sheet');if(old)old.remove();const host=document.querySelector('.boq-section>.container');if(!host)return;const w=document.createElement('section');w.id='ck-active-sheet';w.className='ck-sheet';w.innerHTML='<div class="ck-sheet-head"><div class="ck-sheet-title">'+(id==='boqMaster'?'BOQ MASTER':'MEASUREMENT / MB')+'</div><div class="ck-sheet-note">Linked spreadsheet view — existing data model remains authoritative</div></div><div class="ck-sheet-body">'+(id==='boqMaster'?boqSheet():mbSheet())+'</div>';document.getElementById('civilkoshWorkbookShell')?.after(w);w.querySelectorAll('[data-mb]').forEach(a=>a.onclick=()=>linkMb(Number(a.dataset.mb)));w.querySelectorAll('[data-boq]').forEach(a=>a.onclick=()=>linkBoq(Number(a.dataset.boq)));active(id);w.scrollIntoView({behavior:'smooth',block:'start'});history.replaceState(null,'','#'+id);return}const old=document.getElementById('ck-active-sheet');if(old)old.remove();jump(id)}
+function install(){css();addAbstract();nav();decorate();const observer=new MutationObserver(()=>{anchors();addAbstract();decorate();});const root=document.querySelector('.boq-section>.container');if(root)observer.observe(root,{childList:true,subtree:true});const oldRender=window.render;if(typeof oldRender==='function'&&!oldRender.__ckWorkbook){const wrapped=function(){const z=oldRender.apply(this,arguments);addAbstract();decorate();nav();return z};wrapped.__ckWorkbook=true;window.render=wrapped}const oldIpc=window.ipcRender;if(typeof oldIpc==='function'&&!oldIpc.__ckWorkbook){const wrapped=function(){const z=oldIpc.apply(this,arguments);renderAbstract();return z};wrapped.__ckWorkbook=true;window.ipcRender=wrapped}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 })();
