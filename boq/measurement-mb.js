@@ -56,26 +56,22 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mbInit);else mbInit();
 })();
 
-/* Print-only linkage: reuse the same saved measurementRecords data shown above. */
+/* Print-only linkage: compact Section 4 presentation using the existing saved measurementRecords. */
 (function(){
   if(window.__measurementMbPrintLinkInstalled)return;
   window.__measurementMbPrintLinkInstalled=true;
   function esc(v){return String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]))}
   function fmt(v){return Number.isFinite(Number(v))?Number(v).toFixed(2):'—'}
-  function unit(v,u){return v==null?'—':`${fmt(v)} ${esc(u||'')}`.trim()}
+  function qty(v,u){return v==null?'—':`${fmt(v)} ${esc(u||'')}`.trim()}
+  function sourceItems(){return typeof items!=='undefined'&&Array.isArray(items)?items:[]}
   function records(){
-    const source=typeof items!=='undefined'&&Array.isArray(items)?items:[];
     const out=[];
-    source.forEach((item,itemIndex)=>{
-      (item&&Array.isArray(item.measurementRecords)?item.measurementRecords:[]).forEach((m,index)=>out.push({item,itemIndex,m,index}));
-    });
+    sourceItems().forEach((item,itemIndex)=>(item?.measurementRecords||[]).forEach((m,index)=>out.push({item,itemIndex,m,index})));
     return out;
   }
   function ipcLinks(itemIndex,recordIndex){
-    const state=typeof ipcState!=='undefined'&&ipcState?.record?ipcState.record:null;
-    const source=typeof items!=='undefined'&&Array.isArray(items)?items:[];
-    const links=[];
-    (itemIndex>=0&&Array.isArray(source?.[itemIndex]?.ipcRecords)?source[itemIndex].ipcRecords:[]).forEach(ipc=>{
+    const state=typeof ipcState!=='undefined'&&ipcState?.record?ipcState.record:null,source=sourceItems(),links=[];
+    (Array.isArray(source[itemIndex]?.ipcRecords)?source[itemIndex].ipcRecords:[]).forEach(ipc=>{
       if(!ipc?.no||!Array.isArray(ipc.items))return;
       const saved=ipc.items.find(x=>Number(x?.itemIndex)===itemIndex);
       if(Array.isArray(saved?.evidence)&&saved.evidence.some(x=>Number(x)===recordIndex))links.push({no:String(ipc.no),qty:Number(saved.current)||0});
@@ -86,38 +82,61 @@
     }
     return links;
   }
-  function breakdown(b){
-    const d=b?.detail||{};
-    const type=d.type||'General / L×W×H';
-    const element=[d.element,d.memberId].filter(Boolean).join(' · ')||'—';
-    const dims=[b?.length,b?.width,b?.height].filter(v=>v!==''&&v!=null).join(' × ');
-    const calc=d.calculation||[dims,b?.number!=null?`× ${b.number}`:'',b?.factor!=null?`× ${b.factor}`:''].filter(Boolean).join(' ');
-    const notes=[d.barMark&&`Bar Mark: ${d.barMark}`,d.barType&&`Bar Type / Shape: ${d.barType}`,d.deduction&&`Deduction: ${d.deduction}`,d.addition&&`Addition: ${d.addition}`,b?.note].filter(Boolean).join(' · ');
-    return `<tr><td>${esc(type)}</td><td>${esc(element)}</td><td>${esc(b?.length===''?'—':b?.length??'—')}</td><td>${esc(b?.width===''?'—':b?.width??'—')}</td><td>${esc(b?.height===''?'—':b?.height??'—')}</td><td>${esc(b?.number??'—')}</td><td>${esc(b?.factor??'—')}</td><td>${esc(calc||'—')}${notes?`<div class="small">${esc(notes)}</div>`:''}</td><td class="num">${b?.quantity==null?'—':fmt(b.quantity)}</td></tr>`;
+  function breakdownRows(x){
+    const bs=Array.isArray(x.m?.breakdowns)?x.m.breakdowns:[];
+    if(!bs.length)return '';
+    return bs.map(b=>{
+      const d=b?.detail||{},type=d.type||'General / L×W×H',element=[d.element,d.memberId].filter(Boolean).join(' · ')||'—';
+      const l=b?.length===''?'—':b?.length??'—',w=b?.width===''?'—':b?.width??'—',h=b?.height===''?'—':b?.height??'—';
+      const calc=d.calculation||[l!=='—'?l:'',w!=='—'?w:'',h!=='—'?h:'',b?.number!=null?`× ${b.number}`:'',b?.factor!=null?`× ${b.factor}`:''].filter(Boolean).join(' × ')||'—';
+      return `<tr><td>${esc(type)}</td><td>${esc(element)}</td><td>${esc(l)}</td><td>${esc(w)}</td><td>${esc(h)}</td><td>${esc(b?.number??'—')}</td><td>${esc(b?.factor??'—')}</td><td>${esc(calc)}</td><td class="num">${b?.quantity==null?'—':fmt(b.quantity)}</td></tr>`;
+    }).join('');
   }
-  function recordHtml(x){
-    const m=x.m||{},previous=m.previous==null?null:Number(m.previous),current=m.current==null?null:Number(m.current),cumulative=previous==null||current==null?null:previous+current;
-    const links=ipcLinks(x.itemIndex,x.index);
-    const bs=Array.isArray(m.breakdowns)?m.breakdowns:[];
-    const breakdownHtml=bs.length?`<div class="table-wrap"><table class="evidence-record-table"><thead><tr><th>Type</th><th>Element / Member ID</th><th>L</th><th>W</th><th>H / D / T</th><th>No.</th><th>Factor</th><th>Calculation / Basis</th><th class="num">Qty</th></tr></thead><tbody>${bs.map(breakdown).join('')}</tbody></table></div>`:'';
-    return `<div class="evidence-group"><div class="evidence-head"><div><strong>Record No.</strong><span>Record ${x.index+1}</span></div><div><strong>BOQ Item</strong><span>${esc(x.item?.no||'—')}</span></div><div><strong>Date</strong><span>${esc(m.date||'—')}</span></div><div><strong>Location / Reference</strong><span>${esc(m.location||'—')}</span></div><div><strong>Drawing / Reference</strong><span>${esc(m.drawingReference||'—')}</span></div></div><div class="table-wrap"><table class="evidence-record-table"><thead><tr><th>Work Description / Measurement Note</th><th class="num">Measured Qty</th><th class="num">Approved Qty</th><th class="num">Previous Certified Qty</th><th class="num">Current IPC Qty</th><th class="num">Cumulative Certified Qty</th><th>Remarks</th><th>IPC Evidence / Verification</th></tr></thead><tbody><tr><td>${esc(x.item?.desc||'—')}${m.note?`<div class="small">${esc(m.note)}</div>`:''}</td><td class="num">${unit(m.measured,x.item?.unit)}</td><td class="num">${unit(m.approved,x.item?.unit)}</td><td class="num">${unit(previous,x.item?.unit)}</td><td class="num">${unit(current,x.item?.unit)}</td><td class="num">${unit(cumulative,x.item?.unit)}</td><td>${esc(m.remarks||'—')}</td><td>${links.length?links.map(l=>`${esc(l.no)} · ${fmt(l.qty)} ${esc(x.item?.unit||'')}`).join('<br>'):'Record retained for Measurement / MB history; no current IPC linkage recorded.'}</td></tr></tbody></table></div>${breakdownHtml?`<div style="padding:4pt"><strong>Detailed Measurement Breakdown</strong>${breakdownHtml}</div>`:''}</div>`;
+  function summaryRows(rows){
+    return rows.map(x=>{const m=x.m||{},links=ipcLinks(x.itemIndex,x.index),prev=m.previous==null?null:Number(m.previous),cur=m.current==null?null:Number(m.current),cum=prev==null||cur==null?null:prev+cur;
+      return `<tr><td>${x.index+1}</td><td>${esc(m.date||'—')}</td><td>${esc(x.item?.no||'—')}</td><td>${esc(m.location||'—')}</td><td>${esc(m.drawingReference||'—')}</td><td class="num">${qty(m.measured,x.item?.unit)}</td><td class="num">${qty(m.approved,x.item?.unit)}</td><td class="num">${qty(prev,x.item?.unit)}</td><td class="num">${qty(cur,x.item?.unit)}</td><td class="num">${qty(cum,x.item?.unit)}</td></tr>`;
+    }).join('');
+  }
+  function detailRows(rows){
+    return rows.map(x=>{const bs=Array.isArray(x.m?.breakdowns)?x.m.breakdowns:[];if(!bs.length)return '';
+      return `<tr class="mb-record-label"><td colspan="9"><strong>Record ${x.index+1}</strong> · ${esc(x.item?.no||'—')} · ${esc(x.m?.date||'—')} · ${esc(x.m?.location||'—')} · ${esc(x.m?.drawingReference||'—')}</td></tr>${breakdownRows(x)}`;
+    }).join('');
+  }
+  function evidenceRows(rows){
+    return rows.map(x=>{const m=x.m||{},links=ipcLinks(x.itemIndex,x.index),prev=m.previous==null?null:Number(m.previous),cur=m.current==null?null:Number(m.current),cum=prev==null||cur==null?null:prev+cur;
+      const refs=links.length?links.map(l=>`${esc(l.no)} · ${fmt(l.qty)} ${esc(x.item?.unit||'')}`).join('<br>'):'—';
+      return `<tr><td>${x.index+1}</td><td>${esc(m.date||'—')}</td><td>${esc(m.location||'—')}</td><td>${esc(m.drawingReference||'—')}</td><td>${esc(m.note||'—')}</td><td class="num">${qty(m.measured,x.item?.unit)}</td><td class="num">${qty(m.approved,x.item?.unit)}</td><td class="num">${qty(prev,x.item?.unit)}</td><td class="num">${qty(cur,x.item?.unit)}</td><td class="num">${qty(cum,x.item?.unit)}</td><td>${esc(m.remarks||'—')}</td><td>${refs}</td></tr>`;
+    }).join('');
   }
   function linkedSectionHtml(){
     const rows=records();
     if(!rows.length)return '<p class="section-note">No saved Measurement / MB records are available.</p>';
-    return `<p class="section-note">Measurement / MB verification is read directly from the saved measurementRecords data. Records with Current IPC Qty = 0 are retained where they form part of the saved measurement history or evidence trail.</p>${rows.map(recordHtml).join('')}`;
+    const summary=`<div class="table-wrap"><table class="mb-print-summary"><thead><tr><th>Record</th><th>Date</th><th>BOQ Item</th><th>Location / Reference</th><th>Drawing / Ref.</th><th>Measured Qty</th><th>Approved Qty</th><th>Previous Certified</th><th>Current IPC</th><th>Cumulative</th></tr></thead><tbody>${summaryRows(rows)}</tbody></table></div>`;
+    const details=`<div class="mb-print-subtitle">Detailed Measurement Breakdown</div><div class="table-wrap"><table class="mb-print-breakdown"><thead><tr><th>Record / Group</th><th>Type</th><th>Element / Member</th><th>L</th><th>W</th><th>H/D/T</th><th>No.</th><th>Factor</th><th>Calculation / Basis</th><th class="num">Qty</th></tr></thead><tbody>${detailRows(rows)||'<tr><td colspan="10">No detailed measurement breakdown is saved for these records.</td></tr>'}</tbody></table></div>`;
+    const evidence=`<div class="mb-print-subtitle">Evidence / Verification Trail</div><div class="table-wrap"><table class="mb-print-evidence"><thead><tr><th>Record</th><th>Date</th><th>Location / Reference</th><th>Drawing / Reference</th><th>Measurement Note</th><th>Measured Qty</th><th>Approved Qty</th><th>Previous Certified Qty</th><th>Current IPC Qty</th><th>Cumulative Certified Qty</th><th>Remarks</th><th>IPC Evidence / History</th></tr></thead><tbody>${evidenceRows(rows)}</tbody></table></div>`;
+    return `<p class="section-note">Saved Measurement / MB records are reproduced directly from <strong>measurementRecords</strong>. Records with Current IPC Qty = 0 remain visible for traceability.</p>${summary}${details}${evidence}`;
   }
   function patch(html){
     try{
       const doc=new DOMParser().parseFromString(html,'text/html');
       const target=[...doc.querySelectorAll('.section')].find(s=>/Measurement \/ MB Verification/i.test(s.querySelector('.section-title')?.textContent||''));
-      if(target)target.innerHTML=`<h2 class="section-title">4. Measurement / MB Verification</h2>${linkedSectionHtml()}`;
+      if(target){target.innerHTML=`<h2 class="section-title">4. Measurement / MB Verification</h2>${linkedSectionHtml()}`;target.querySelectorAll('.evidence-group').forEach(e=>e.remove());}
       const state=typeof ipcState!=='undefined'&&ipcState?.record?ipcState.record:{};
       const number=String(state.no||state.editingNo||'').trim();
-      if(number){
-        doc.querySelectorAll('.meta-row').forEach(row=>{if(/IPC \/ Running Bill No\./i.test(row.querySelector('strong')?.textContent||'')){const span=row.querySelector('span');if(span)span.textContent=number}});
-        doc.querySelectorAll('.mast .docref').forEach(el=>{if(el.textContent.trim()==='')el.textContent=number});
-      }
+      if(number)doc.querySelectorAll('.meta-row').forEach(row=>{if(/IPC \/ Running Bill No\./i.test(row.querySelector('strong')?.textContent||'')){const span=row.querySelector('span');if(span)span.textContent=number}});
+      const style=doc.createElement('style');style.textContent=`
+        .mb-print-summary,.mb-print-breakdown,.mb-print-evidence{font-size:6.7pt;margin:0 0 5pt;table-layout:fixed}
+        .mb-print-summary th,.mb-print-summary td,.mb-print-breakdown th,.mb-print-breakdown td,.mb-print-evidence th,.mb-print-evidence td{padding:2.4pt 2.5pt;vertical-align:top;line-height:1.2}
+        .mb-print-summary th{white-space:normal;text-align:center}.mb-print-summary th:nth-child(1){width:6%}.mb-print-summary th:nth-child(2){width:8%}.mb-print-summary th:nth-child(3){width:9%}.mb-print-summary th:nth-child(4){width:17%}.mb-print-summary th:nth-child(5){width:12%}.mb-print-summary th:nth-child(6){width:9%}.mb-print-summary th:nth-child(7){width:9%}.mb-print-summary th:nth-child(8){width:10%}.mb-print-summary th:nth-child(9){width:10%}.mb-print-summary th:nth-child(10){width:10%}
+        .mb-print-breakdown{font-size:6.5pt}.mb-print-breakdown th:nth-child(1){width:8%}.mb-print-breakdown th:nth-child(2){width:11%}.mb-print-breakdown th:nth-child(3){width:15%}.mb-print-breakdown th:nth-child(4){width:6%}.mb-print-breakdown th:nth-child(5){width:6%}.mb-print-breakdown th:nth-child(6){width:7%}.mb-print-breakdown th:nth-child(7){width:6%}.mb-print-breakdown th:nth-child(8){width:7%}.mb-print-breakdown th:nth-child(9){width:25%}.mb-print-breakdown th:nth-child(10){width:9%}
+        .mb-print-evidence{font-size:6.2pt}.mb-print-evidence th:nth-child(1){width:5%}.mb-print-evidence th:nth-child(2){width:7%}.mb-print-evidence th:nth-child(3){width:12%}.mb-print-evidence th:nth-child(4){width:10%}.mb-print-evidence th:nth-child(5){width:14%}.mb-print-evidence th:nth-child(6){width:7%}.mb-print-evidence th:nth-child(7){width:7%}.mb-print-evidence th:nth-child(8){width:8%}.mb-print-evidence th:nth-child(9){width:8%}.mb-print-evidence th:nth-child(10){width:8%}.mb-print-evidence th:nth-child(11){width:8%}.mb-print-evidence th:nth-child(12){width:6%}
+        .mb-print-subtitle{font-size:7.4pt;font-weight:700;text-transform:uppercase;letter-spacing:.025em;margin:5pt 0 3pt;padding:3pt 4pt;background:#f1f3f1;border-left:2px solid #555d58;break-after:avoid;page-break-after:avoid}
+        .mb-record-label td{font-weight:700;background:#f5f6f5;padding:2.5pt 3pt;break-after:avoid;page-break-after:avoid}
+        .mb-print-summary tr,.mb-print-breakdown tr,.mb-print-evidence tr{break-inside:avoid;page-break-inside:avoid}
+        .mb-print-breakdown thead,.mb-print-summary thead,.mb-print-evidence thead{display:table-header-group}
+        .mb-print-breakdown tbody .mb-record-label{break-after:avoid;page-break-after:avoid}
+        @media print{.mb-print-summary,.mb-print-breakdown,.mb-print-evidence{width:100%}.mb-print-subtitle{break-after:avoid;page-break-after:avoid}}
+      `;doc.head.appendChild(style);
       return '<!doctype html>'+doc.documentElement.outerHTML;
     }catch(e){return html}
   }
