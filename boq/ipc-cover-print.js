@@ -49,7 +49,7 @@
           const currentAmount=Number(q[5].textContent)*rate;
           const cumulativeAmount=Number(q[6].textContent)*rate;
           const row=doc.createElement('tr');
-          row.innerHTML=`<td>${q[0].innerHTML}</td><td>${q[1].innerHTML}</td><td class="center nowrap">${q[2].innerHTML}</td><td class="num">${q[3].innerHTML}</td><td class="num">${q[4].innerHTML}</td><td class="num">${q[5].innerHTML}</td><td class="num">${q[6].innerHTML}</td><td class="num">${q[7].innerHTML}</td><td class="num">${a[2].innerHTML}</td><td class="num">${formatBoqAmount(currentAmount)}</td><td class="num">${formatBoqAmount(cumulativeAmount)}</td>`;
+          row.innerHTML=`<td>${q[0].innerHTML}</td><td>${q[1].innerHTML}</td><td class="center nowrap">${q[2].innerHTML}</td><td class="num">${q[3].innerHTML}</td><td class="num">${q[4].innerHTML}</td><td class="num">${q[5].innerHTML}</td><td class="num">${q[6].innerHTML}</td><td class="num">${q[7].innerHTML}</td><td class="num">${formatBoqAmount(rate)}</td><td class="num">${formatBoqAmount(currentAmount)}</td><td class="num">${formatBoqAmount(cumulativeAmount)}</td>`;
           body.appendChild(row);
         });
         const note=boqSection.querySelector('.section-note');
@@ -124,13 +124,13 @@
       .ipc-cover-signatures span{font-size:7pt;color:#59615c;font-weight:700;text-transform:uppercase}
       .ipc-cover-signatures strong{display:block;margin-top:20pt;font-size:8pt;overflow-wrap:anywhere}
       .boq-valuation-table{font-size:7.3pt;table-layout:fixed}
-      .boq-valuation-table th:nth-child(1){width:5%}.boq-valuation-table th:nth-child(2){width:20%}.boq-valuation-table th:nth-child(3){width:5%}.boq-valuation-table th:nth-child(4){width:7%}.boq-valuation-table th:nth-child(5){width:9%}.boq-valuation-table th:nth-child(6){width:9%}.boq-valuation-table th:nth-child(7){width:10%}.boq-valuation-table th:nth-child(8){width:8%}.boq-valuation-table th:nth-child(9){width:9%}.boq-valuation-table th:nth-child(10){width:9.5%}.boq-valuation-table th:nth-child(11){width:8.5%}
+      .boq-valuation-table th:nth-child(1){width:5%}.boq-valuation-table th:nth-child(2){width:20%}.boq-valuation-table th:nth-child(3){width:5%}.boq-valuation-table th:nth-child(4){width:7%}.boq-valuation-table th:nth-child(5){width:9%}.boq-valuation-table th:nth-child(6){width:9%}.boq-valuation-table th:nth-child(7){width:10%}.boq-valuation-table th:nth-child(8){width:8%}.boq-valuation-table th:nth-child(9){width:10%}.boq-valuation-table th:nth-child(10){width:9.5%}.boq-valuation-table th:nth-child(11){width:8.5%}
       .boq-valuation-table th,.boq-valuation-table td{padding:4pt 2.5pt;overflow-wrap:anywhere;word-break:normal}
       .boq-valuation-table th{white-space:normal;line-height:1.15;text-align:center;vertical-align:middle}
-      .boq-valuation-table th:nth-child(n+4){white-space:nowrap}
+      .boq-valuation-table th:nth-child(n+4){white-space:nowrap;text-align:center}
       .boq-valuation-table td:first-child,.boq-valuation-table td:nth-child(2),.boq-valuation-table td:nth-child(3){text-align:left}
       .boq-valuation-table th:first-child,.boq-valuation-table th:nth-child(2),.boq-valuation-table th:nth-child(3){text-align:left}
-      .boq-valuation-table th:nth-child(n+4),.boq-valuation-table td:nth-child(n+4){text-align:right}
+      .boq-valuation-table th:nth-child(n+4),.boq-valuation-table td:nth-child(n+4){text-align:center}
       .boq-valuation-table th,.boq-valuation-table td{min-width:0}
       .boq-valuation-table th:nth-child(4),.boq-valuation-table th:nth-child(5),.boq-valuation-table th:nth-child(6),.boq-valuation-table th:nth-child(7),.boq-valuation-table th:nth-child(8){min-width:7.5%}
       .boq-valuation-table th:nth-child(7){min-width:9%}
