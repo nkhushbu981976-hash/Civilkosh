@@ -120,14 +120,17 @@
       .ipc-cover-signatures span{font-size:7pt;color:#59615c;font-weight:700;text-transform:uppercase}
       .ipc-cover-signatures strong{display:block;margin-top:20pt;font-size:8pt;overflow-wrap:anywhere}
       .boq-valuation-table{font-size:7.3pt;table-layout:fixed}
-      .boq-valuation-table th:nth-child(1){width:5%}.boq-valuation-table th:nth-child(2){width:23%}.boq-valuation-table th:nth-child(3){width:5%}.boq-valuation-table th:nth-child(4){width:7%}.boq-valuation-table th:nth-child(5){width:8%}.boq-valuation-table th:nth-child(6){width:8%}.boq-valuation-table th:nth-child(7){width:8%}.boq-valuation-table th:nth-child(8){width:7%}.boq-valuation-table th:nth-child(9){width:10%}.boq-valuation-table th:nth-child(10){width:9.5%}.boq-valuation-table th:nth-child(11){width:9.5%}
+      .boq-valuation-table th:nth-child(1){width:5%}.boq-valuation-table th:nth-child(2){width:23%}.boq-valuation-table th:nth-child(3){width:5%}.boq-valuation-table th:nth-child(4){width:7%}.boq-valuation-table th:nth-child(5){width:8%}.boq-valuation-table th:nth-child(6){width:8%}.boq-valuation-table th:nth-child(7){width:9%}.boq-valuation-table th:nth-child(8){width:7%}.boq-valuation-table th:nth-child(9){width:10%}.boq-valuation-table th:nth-child(10){width:9.5%}.boq-valuation-table th:nth-child(11){width:8.5%}
       .boq-valuation-table th,.boq-valuation-table td{padding:4pt 2.5pt;overflow-wrap:anywhere;word-break:normal}
       .boq-valuation-table th{white-space:normal;line-height:1.15;text-align:center;vertical-align:middle}
       .boq-valuation-table td:first-child,.boq-valuation-table td:nth-child(2),.boq-valuation-table td:nth-child(3){text-align:left}
       .boq-valuation-table th:first-child,.boq-valuation-table th:nth-child(2),.boq-valuation-table th:nth-child(3){text-align:left}
       .boq-valuation-table th:nth-child(n+4),.boq-valuation-table td:nth-child(n+4){text-align:right}
       .boq-valuation-table th,.boq-valuation-table td{min-width:0}
-      .boq-valuation-table td.num{white-space:nowrap;overflow-wrap:normal}
+      .boq-valuation-table th:nth-child(4),.boq-valuation-table th:nth-child(5),.boq-valuation-table th:nth-child(6),.boq-valuation-table th:nth-child(7),.boq-valuation-table th:nth-child(8){min-width:7.5%}
+      .boq-valuation-table th:nth-child(7){min-width:9%}
+      .boq-valuation-table td.num{white-space:nowrap;overflow-wrap:normal;word-break:normal}
+      .boq-valuation-table td.num{overflow:hidden;text-overflow:clip}
       .section .summary{width:100%;table-layout:fixed}
       .section .summary tr>td:first-child{width:68%;text-align:left;padding:4pt 8pt}
       .section .summary tr>td:last-child{width:32%;text-align:right;padding:4pt 8pt;white-space:nowrap}
