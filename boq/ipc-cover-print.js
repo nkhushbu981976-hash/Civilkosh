@@ -96,8 +96,6 @@
     meta.remove();
     firstSection?.remove();
     if(documentRoot)documentRoot.insertBefore(cover,documentRoot.firstChild);
-    const pageTwoSection=documentRoot?.querySelector('.section');
-    pageTwoSection?.classList.add('ipc-page-two-start');
     const style=doc.createElement('style');
     style.textContent=`
       .ipc-cover{margin:0;break-inside:avoid;page-break-inside:avoid;break-after:page;page-break-after:always;min-height:245mm;display:flex;flex-direction:column;justify-content:flex-start}
@@ -121,11 +119,12 @@
       .ipc-cover-signatures>div:last-child{border-right:0}
       .ipc-cover-signatures span{font-size:7pt;color:#59615c;font-weight:700;text-transform:uppercase}
       .ipc-cover-signatures strong{display:block;margin-top:20pt;font-size:8pt;overflow-wrap:anywhere}
-      .ipc-page-two-start{break-before:page;page-break-before:always}
-      .boq-valuation-table{font-size:6.55pt}
-      .boq-valuation-table th:nth-child(1){width:5%}.boq-valuation-table th:nth-child(2){width:25%}.boq-valuation-table th:nth-child(3){width:5%}.boq-valuation-table th:nth-child(4){width:7%}.boq-valuation-table th:nth-child(5){width:7%}.boq-valuation-table th:nth-child(6){width:7%}.boq-valuation-table th:nth-child(7){width:8%}.boq-valuation-table th:nth-child(8){width:7%}.boq-valuation-table th:nth-child(9){width:10%}.boq-valuation-table th:nth-child(10){width:9%}.boq-valuation-table th:nth-child(11){width:10%}
-      .boq-valuation-table th,.boq-valuation-table td{padding:3pt 3pt}
-      @media print{.ipc-cover{min-height:245mm;break-after:page;page-break-after:always}.ipc-page-two-start{break-before:page;page-break-before:always}}
+      .boq-valuation-table{font-size:7.3pt;table-layout:fixed}
+      .boq-valuation-table th:nth-child(1){width:5%}.boq-valuation-table th:nth-child(2){width:23%}.boq-valuation-table th:nth-child(3){width:5%}.boq-valuation-table th:nth-child(4){width:7%}.boq-valuation-table th:nth-child(5){width:8%}.boq-valuation-table th:nth-child(6){width:8%}.boq-valuation-table th:nth-child(7){width:8%}.boq-valuation-table th:nth-child(8){width:7%}.boq-valuation-table th:nth-child(9){width:10%}.boq-valuation-table th:nth-child(10){width:9.5%}.boq-valuation-table th:nth-child(11){width:9.5%}
+      .boq-valuation-table th,.boq-valuation-table td{padding:4pt 2.5pt;overflow-wrap:anywhere;word-break:normal}
+      .boq-valuation-table th{white-space:normal;line-height:1.15}
+      .boq-valuation-table td.num{white-space:normal;overflow-wrap:anywhere}
+      @media print{.ipc-cover{min-height:245mm;break-after:page;page-break-after:always}}
     `;
     doc.head.appendChild(style);
     return '<!doctype html>'+doc.documentElement.outerHTML;
