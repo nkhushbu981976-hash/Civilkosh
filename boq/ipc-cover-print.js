@@ -23,9 +23,6 @@
       const v=row.querySelector('span')?.textContent?.trim()||'';
       if(k)data[k]=v;
     });
-    const liveState=typeof ipcState!=='undefined'&&ipcState?.record?ipcState.record:null;
-    const liveIpcNumber=String(liveState?.no||liveState?.editingNo||data['IPC / Running Bill No.']||'').trim();
-    if(liveIpcNumber)data['IPC / Running Bill No.']=liveIpcNumber;
     const cert=[...doc.querySelectorAll('.section')].find(s=>/Net Payment \/ Certification/i.test(s.querySelector('.section-title')?.textContent||''));
     const certData={};
     cert?.querySelectorAll('.summary tr').forEach(row=>{
