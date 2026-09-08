@@ -17,7 +17,7 @@
       .ck-workbook-titlebar{display:flex;align-items:center;min-height:38px;padding:7px 12px;background:#e7ece9;border-bottom:1px solid #c8d0cb;color:#25312c}
       .ck-workbook-title{font-size:12px;font-weight:850;letter-spacing:.12em;line-height:1;text-transform:uppercase}
       .ck-workbook-subtitle{margin-left:10px;color:#68746e;font-size:10px;font-weight:600;letter-spacing:.02em}
-      .ck-workbook-nav{width:100%;box-sizing:border-box;padding:0 7px;background:#eef1ef}
+      .ck-workbook-nav{display:block;width:100%;box-sizing:border-box;padding:0 7px;background:#eef1ef}
       .ck-workbook-nav-inner{display:flex;align-items:flex-end;gap:3px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;white-space:nowrap;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
       .ck-workbook-nav a{position:relative;display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;min-height:34px;margin-top:5px;padding:6px 11px;border:1px solid #c5ceca;border-bottom-color:#b9c4be;border-radius:6px 6px 0 0;background:#f9faf9;color:#44514b;text-decoration:none;font-size:10.5px;font-weight:800;letter-spacing:.035em;line-height:1;outline:none}
       .ck-workbook-nav a:hover{background:#fff;color:#24312b}
@@ -86,7 +86,7 @@
       shell.setAttribute('aria-label','Project Workbook');
       host.insertBefore(shell,host.firstElementChild);
     }
-    shell.innerHTML=`<div class="ck-workbook-titlebar"><span class="ck-workbook-title">PROJECT WORKBOOK</span><span class="ck-workbook-subtitle">Linked project control sheets</span></div><nav id="civilkoshWorkbookNav" class="ck-workbook-nav" aria-label="Project workbook sheets"><div class="ck-workbook-nav-inner">${navItems.map(([id,label])=>`<a href="#${id}" data-workbook-target="${id}">${label}</a>`).join('')}</div></nav>`;
+    shell.innerHTML=`<div class="ck-workbook-titlebar"><span class="ck-workbook-title">PROJECT WORKBOOK</span><span class="ck-workbook-subtitle">Linked project control sheets</span></div><div id="civilkoshWorkbookNav" class="ck-workbook-nav" role="tablist" aria-label="Project workbook sheets"><div class="ck-workbook-nav-inner">${navItems.map(([id,label])=>`<a href="#${id}" data-workbook-target="${id}" role="tab">${label}</a>`).join('')}</div></div>`;
     shell.querySelectorAll('a[data-workbook-target]').forEach(a=>a.addEventListener('click',e=>{const target=document.getElementById(a.dataset.workbookTarget);if(!target)return;e.preventDefault();openTarget(target)}));
     const hash=location.hash.replace(/^#/,'');
     const initial=navItems.some(([id])=>id===hash)?hash:'boqMaster';
