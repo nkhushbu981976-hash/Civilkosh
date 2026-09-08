@@ -122,8 +122,19 @@
       .boq-valuation-table{font-size:7.3pt;table-layout:fixed}
       .boq-valuation-table th:nth-child(1){width:5%}.boq-valuation-table th:nth-child(2){width:23%}.boq-valuation-table th:nth-child(3){width:5%}.boq-valuation-table th:nth-child(4){width:7%}.boq-valuation-table th:nth-child(5){width:8%}.boq-valuation-table th:nth-child(6){width:8%}.boq-valuation-table th:nth-child(7){width:8%}.boq-valuation-table th:nth-child(8){width:7%}.boq-valuation-table th:nth-child(9){width:10%}.boq-valuation-table th:nth-child(10){width:9.5%}.boq-valuation-table th:nth-child(11){width:9.5%}
       .boq-valuation-table th,.boq-valuation-table td{padding:4pt 2.5pt;overflow-wrap:anywhere;word-break:normal}
-      .boq-valuation-table th{white-space:normal;line-height:1.15}
-      .boq-valuation-table td.num{white-space:normal;overflow-wrap:anywhere}
+      .boq-valuation-table th{white-space:normal;line-height:1.15;text-align:center;vertical-align:middle}
+      .boq-valuation-table td:first-child,.boq-valuation-table td:nth-child(2),.boq-valuation-table td:nth-child(3){text-align:left}
+      .boq-valuation-table th:first-child,.boq-valuation-table th:nth-child(2),.boq-valuation-table th:nth-child(3){text-align:left}
+      .boq-valuation-table th:nth-child(n+4),.boq-valuation-table td:nth-child(n+4){text-align:right}
+      .boq-valuation-table th,.boq-valuation-table td{min-width:0}
+      .boq-valuation-table td.num{white-space:nowrap;overflow-wrap:normal}
+      .section .summary{width:100%;table-layout:fixed}
+      .section .summary tr>td:first-child{width:68%;text-align:left;padding:4pt 8pt}
+      .section .summary tr>td:last-child{width:32%;text-align:right;padding:4pt 8pt;white-space:nowrap}
+      .section .summary td{vertical-align:middle}
+      .section .summary td+td{padding-left:8pt}
+      .section .callout{padding:7pt 9pt;line-height:1.45;overflow-wrap:anywhere;word-break:normal}
+      .section .signatures{margin-left:0;margin-right:0}
       @media print{.ipc-cover{min-height:245mm;break-after:page;page-break-after:always}}
     `;
     doc.head.appendChild(style);
