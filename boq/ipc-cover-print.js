@@ -38,7 +38,7 @@
       if(quantityTable&&amountTable){
         const table=doc.createElement('table');
         table.className='boq-valuation-table';
-        table.innerHTML=`<thead><tr><th>Item No.</th><th>Description</th><th>Unit</th><th class="num">BOQ Qty</th><th class="num">Previous Qty</th><th class="num">Current Qty</th><th class="num">Cumulative Qty</th><th class="num">Balance Qty</th><th class="num">Rate</th><th class="num">Current Amt</th><th class="num">Cumulative Amt</th></tr></thead><tbody></tbody>`;
+        table.innerHTML=`<thead><tr><th>Item No.</th><th>Description</th><th>Unit</th><th class="num">BOQ Qty</th><th class="num">Previous Qty</th><th class="num">Current Qty</th><th class="num">Cumulative<br>Qty</th><th class="num">Balance<br>Qty</th><th class="num">Rate</th><th class="num">Current<br>Amt</th><th class="num">Cumulative<br>Amt</th></tr></thead><tbody></tbody>`;
         const body=table.querySelector('tbody');
         const formatBoqAmount=v=>{const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n):'0.00'};
         quantityRows.forEach((qRow,index)=>{
@@ -140,6 +140,9 @@
       .boq-valuation-table td:nth-child(9),.boq-valuation-table td:nth-child(10),.boq-valuation-table td:nth-child(11){font-feature-settings:"tnum" 1}
       .boq-valuation-table td:nth-child(9),.boq-valuation-table td:nth-child(10),.boq-valuation-table td:nth-child(11){white-space:nowrap}
       .boq-valuation-table td:nth-child(10) .currency,.boq-valuation-table td:nth-child(11) .currency{display:none}
+      .boq-valuation-table th:nth-child(4),.boq-valuation-table th:nth-child(5),.boq-valuation-table th:nth-child(6),.boq-valuation-table th:nth-child(9){white-space:nowrap}
+      .boq-valuation-table th:nth-child(7),.boq-valuation-table th:nth-child(8),.boq-valuation-table th:nth-child(10),.boq-valuation-table th:nth-child(11){white-space:normal;overflow-wrap:normal;word-break:normal}
+      .boq-valuation-table th:nth-child(7) br,.boq-valuation-table th:nth-child(8) br,.boq-valuation-table th:nth-child(10) br,.boq-valuation-table th:nth-child(11) br{display:block}
       .section .summary{width:100%;table-layout:fixed}
       .section .summary tr>td:first-child{width:68%;text-align:left;padding:4pt 8pt}
       .section .summary tr>td:last-child{width:32%;text-align:right;padding:4pt 8pt;white-space:nowrap}
