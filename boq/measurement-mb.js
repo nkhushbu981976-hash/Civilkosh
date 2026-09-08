@@ -89,7 +89,7 @@
       const d=b?.detail||{},type=d.type||'General / L×W×H',element=[d.element,d.memberId].filter(Boolean).join(' · ')||'—';
       const l=b?.length===''?'—':b?.length??'—',w=b?.width===''?'—':b?.width??'—',h=b?.height===''?'—':b?.height??'—';
       const calc=d.calculation||[l!=='—'?l:'',w!=='—'?w:'',h!=='—'?h:'',b?.number!=null?`× ${b.number}`:'',b?.factor!=null?`× ${b.factor}`:''].filter(Boolean).join(' × ')||'—';
-      return `<tr><td>${esc(type)}</td><td>${esc(element)}</td><td>${esc(l)}</td><td>${esc(w)}</td><td>${esc(h)}</td><td>${esc(b?.number??'—')}</td><td>${esc(b?.factor??'—')}</td><td>${esc(calc)}</td><td class="num">${b?.quantity==null?'—':fmt(b.quantity)}</td></tr>`;
+      return `<tr><td>Record ${x.index+1}</td><td>${esc(type)}</td><td>${esc(element)}</td><td>${esc(l)}</td><td>${esc(w)}</td><td>${esc(h)}</td><td>${esc(b?.number??'—')}</td><td>${esc(b?.factor??'—')}</td><td>${esc(calc)}</td><td class="num">${b?.quantity==null?'—':fmt(b.quantity)}</td></tr>`;
     }).join('');
   }
   function summaryRows(rows){
@@ -99,7 +99,7 @@
   }
   function detailRows(rows){
     return rows.map(x=>{const bs=Array.isArray(x.m?.breakdowns)?x.m.breakdowns:[];if(!bs.length)return '';
-      return `<tr class="mb-record-label"><td colspan="9"><strong>Record ${x.index+1}</strong> · ${esc(x.item?.no||'—')} · ${esc(x.m?.date||'—')} · ${esc(x.m?.location||'—')} · ${esc(x.m?.drawingReference||'—')}</td></tr>${breakdownRows(x)}`;
+      return `<tr class="mb-record-label"><td colspan="10"><strong>Record ${x.index+1}</strong> · ${esc(x.item?.no||'—')} · ${esc(x.m?.date||'—')} · ${esc(x.m?.location||'—')} · ${esc(x.m?.drawingReference||'—')}</td></tr>${breakdownRows(x)}`;
     }).join('');
   }
   function evidenceRows(rows){
