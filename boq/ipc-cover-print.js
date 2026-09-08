@@ -23,6 +23,9 @@
       const v=row.querySelector('span')?.textContent?.trim()||'';
       if(k)data[k]=v;
     });
+    const liveState=typeof ipcState!=='undefined'&&ipcState?.record?ipcState.record:null;
+    const liveIpcNumber=String(liveState?.no||liveState?.editingNo||data['IPC / Running Bill No.']||'').trim();
+    if(liveIpcNumber)data['IPC / Running Bill No.']=liveIpcNumber;
     const cert=[...doc.querySelectorAll('.section')].find(s=>/Net Payment \/ Certification/i.test(s.querySelector('.section-title')?.textContent||''));
     const certData={};
     cert?.querySelectorAll('.summary tr').forEach(row=>{
@@ -119,6 +122,19 @@
     mast.remove();
     meta.remove();
     if(documentRoot)documentRoot.insertBefore(cover,documentRoot.firstChild);
+    const cleanupStrayUp=section=>{
+      if(!section)return;
+      section.querySelectorAll('tbody tr').forEach(row=>{
+        const cells=[...row.querySelectorAll('td')];
+        if(!cells.some(cell=>cell.textContent?.trim()==='Measurement Book / Measurement Sheet'))return;
+        const walker=doc.createTreeWalker(row,NodeFilter.SHOW_TEXT);
+        const nodes=[];
+        let node;
+        while(node=walker.nextNode())nodes.push(node);
+        nodes.forEach(text=>{if(text.nodeValue.trim()==='Up')text.remove()});
+      });
+    };
+    [...doc.querySelectorAll('.section')].filter(s=>/Supporting Documents \/ Attachment Register|Evidence Index/i.test(s.querySelector('.section-title')?.textContent||'')).forEach(cleanupStrayUp);
     const style=doc.createElement('style');
     style.textContent=`
       .ipc-cover{margin:0;break-inside:avoid;page-break-inside:avoid;break-after:page;page-break-after:always;min-height:245mm;display:flex;flex-direction:column;justify-content:flex-start}
