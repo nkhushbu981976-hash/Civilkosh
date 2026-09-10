@@ -9,9 +9,9 @@ new vm.Script(source,{filename:'excel-export.js'});
 const headers=['Item ID','Item No.','Section','Work Description','Unit','BOQ Quantity','Adopted Rate','BOQ Amount','Quantity Basis','Drawing / Reference','Change Classification','Approved Variation Quantity','Allowed Quantity','Change / Approval Reference','Remarks'];
 assert.strictEqual(headers.length,15);
 assert.deepStrictEqual(headers,['Item ID','Item No.','Section','Work Description','Unit','BOQ Quantity','Adopted Rate','BOQ Amount','Quantity Basis','Drawing / Reference','Change Classification','Approved Variation Quantity','Allowed Quantity','Change / Approval Reference','Remarks']);
-const toNumber=v=>{const x=Number(v);return Number.isFinite(x)?x:null};
+const toNumber=v=>{if(v===null||v===undefined||String(v).trim()==='')return null;const x=Number(v);return Number.isFinite(x)?x:null};
 const variationAllowedQty=item=>{const c=item?.change;if(!c||c.classification==='Original BOQ Item')return Number(item.qty)||0;if(c.status!=='Approved')return 0;const q=Number(c.revisedQuantity);return Number.isFinite(q)&&q>=0?q:Number(item.qty)||0};
-function mapBoq(item){const c=item.change||{},allowed=variationAllowedQty(item),qty=toNumber(item.qty),rate=toNumber(item.rate);const approvedVariation=allowed==null||qty==null?'':allowed-qty;const amount=rate==null||qty==null?null:qty*rate;return[item.id,item.no,item.section,item.desc,item.unit,qty,rate,amount,item.quantityBasis,item.drawingReference,c.classification||'',approvedVariation,allowed,c.status==='Approved'?(c.approvalReference||c.referenceNo||''):c.referenceNo||'',item.remarks]}
+function mapBoq(item){const c=item.change||{},allowed=variationAllowedQty(item),qty=toNumber(item.qty),rate=toNumber(item.rate);const approvedVariation=c.status==='Approved'&&Number.isFinite(Number(c.revisedQuantity))&&qty!=null?Number(c.revisedQuantity)-qty:0;const amount=rate==null||qty==null?null:qty*rate;return[item.id,item.no,item.section,item.desc,item.unit,qty,rate,amount,item.quantityBasis,item.drawingReference,c.classification||'',approvedVariation,allowed,c.status==='Approved'?(c.approvalReference||c.referenceNo||''):c.referenceNo||'',item.remarks]}
 const a={id:'ITEM-a',no:'1',section:'Earthwork',desc:'Excavation',unit:'m3',qty:10,rate:125,quantityBasis:'Calculated',drawingReference:'D-01',remarks:'keep'};
 assert.strictEqual(mapBoq(a)[0],'ITEM-a');
 assert.strictEqual(mapBoq(a)[1],'1');
@@ -28,11 +28,11 @@ assert.strictEqual(approved[11],4);
 assert.strictEqual(approved[12],14);
 assert.strictEqual(approved[13],'APR-1');
 const proposed=mapBoq({...a,change:{classification:'Variation',status:'Proposed',revisedQuantity:14,approvalReference:'APR-2',referenceNo:'VAR-2'}});
-assert.strictEqual(proposed[11],-10);
+assert.strictEqual(proposed[11],0);
 assert.strictEqual(proposed[12],0);
 assert.strictEqual(proposed[13],'VAR-2');
 const rejected=mapBoq({...a,change:{classification:'Variation',status:'Rejected',revisedQuantity:14,referenceNo:'VAR-3'}});
-assert.strictEqual(rejected[11],-10);
+assert.strictEqual(rejected[11],0);
 assert.strictEqual(rejected[12],0);
 const reordered=[{id:'ITEM-a',no:'1',qty:10},{id:'ITEM-b',no:'2',qty:20}];
 const before=reordered.map(x=>x.id);reordered.reverse();assert.deepStrictEqual(reordered.map(x=>x.id).sort(),before.sort());
