@@ -38,5 +38,5 @@ const reordered=[{id:'ITEM-a',no:'1',qty:10},{id:'ITEM-b',no:'2',qty:20}];
 const before=reordered.map(x=>x.id);reordered.reverse();assert.deepStrictEqual(reordered.map(x=>x.id).sort(),before.sort());
 const sourceAssertions=[/s\(x\.id\)/,/s\(x\.no\)/,/n\(x\.qty\)/,/n\(x\.rate\)/,/variationAllowedQty\(x\)/,/\['Item ID','Item No\.','Section','Work Description','Unit','BOQ Quantity','Adopted Rate','BOQ Amount','Quantity Basis','Drawing \/ Reference','Change Classification','Approved Variation Quantity','Allowed Quantity','Change \/ Approval Reference','Remarks'\]/,/XLSX\.writeFile\(wb,/,/window\.downloadCivilKoshExcel=exportWorkbook/];
 sourceAssertions.forEach(re=>assert.ok(re.test(source),`missing exporter contract: ${re}`));
-['Measurement / MB','Quantity Abstract','Rate Analysis','IPC / Running Bill','Variation / Extra / Substituted','Evidence & Documents','Reports / Summary'].forEach(name=>assert.ok(source.includes(`makeSheet(wb,'${name}'`),`missing existing sheet: ${name}`));
+['Measurement / MB','Quantity Abstract','Rate Analysis','IPC / Running Bill','Variation','Evidence & Documents','Reports / Summary'].forEach(name=>assert.ok(source.includes(`makeSheet(wb,'${name}'`),`missing existing sheet: ${name}`));
 console.log('BOQ Master mapping tests: PASS');
